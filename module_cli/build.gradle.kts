@@ -45,7 +45,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/exeki/nsmp.sdk.sources_syncn")
+            url = uri("https://maven.pkg.github.com/exeki/nsmp.sdk.sources_sync")
             credentials {
                 username = System.getenv("GITHUB_USERNAME")
                 password = System.getenv("GITHUB_TOKEN")
