@@ -1,0 +1,137 @@
+package ru.kazantsev.nsmp.sdk.gradle_plugin
+
+import org.gradle.testkit.runner.GradleRunner
+import org.junit.jupiter.api.BeforeEach
+import ru.kazantsev.nsmp.sdk.gradle_plugin.tasks.TaskArgs
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+
+abstract class PluginFunctionalTestBase {
+
+    companion object {
+        const val CLEAN_TEST_PROJECT_DIR = true
+
+        private const val TEMPLATE_SETTINGS = "templates/consumer/settings.gradle.kts.tpl"
+        private const val TEMPLATE_BUILD = "templates/consumer/build.gradle.kts.tpl"
+        private const val TEMPLATE_SDK_CONFIG_FULL = "templates/consumer/sdk-configuration-full.gradle.kts.tpl"
+        private const val TEMPLATE_SDK_CONFIG_INSTALLATION_ONLY =
+            "templates/consumer/sdk-configuration-installation-only.gradle.kts.tpl"
+        private const val TEMPLATE_SDK_CONFIG_IN_PATH =
+            "templates/consumer/sdk-configuration-in-path.gradle.kts.tpl"
+        private const val TEMPLATE_LOCAL_INFO_JSON = "templates/consumer/local-info.json.tpl"
+    }
+
+    lateinit var testProjectDir: Path
+
+    @BeforeEach
+    fun setUpTestProject() {
+        testProjectDir = Paths.get("build", "functional-test-project")
+        if (CLEAN_TEST_PROJECT_DIR) deleteRecursively(testProjectDir)
+        Files.createDirectories(testProjectDir)
+    }
+
+    protected fun writeConsumerProject() {
+        writeConsumerProjectWithConfigTemplate(TEMPLATE_SDK_CONFIG_FULL)
+    }
+
+    protected fun writeConsumerProjectWithInstallationOnlyConfig() {
+        writeConsumerProjectWithConfigTemplate(TEMPLATE_SDK_CONFIG_INSTALLATION_ONLY)
+    }
+
+    protected fun writeConsumerProjectWithConfigInPath() {
+        writeConsumerProjectWithConfigTemplate(TEMPLATE_SDK_CONFIG_IN_PATH)
+    }
+
+    protected fun writeLocalInfoFile() {
+        writeFileFromTemplate(".nsmp_sdk/info.json", TEMPLATE_LOCAL_INFO_JSON, emptyMap())
+    }
+
+    protected fun runner(vararg arguments: String): GradleRunner {
+        return GradleRunner.create()
+            .withProjectDir(testProjectDir.toFile())
+            .withArguments(*arguments)
+            .withPluginClasspath()
+    }
+
+    protected fun connectorParamsDirectArgs(): Array<String> {
+        return arrayOf(
+            TaskArgs.INSTALLATION_ID.withDefaultValue(),
+            TaskArgs.SCHEME.withDefaultValue(),
+            TaskArgs.HOST.withDefaultValue(),
+            TaskArgs.ACCESS_KEY.withDefaultValue(),
+            TaskArgs.IGNORE_SSL.flag
+        ).toList().toTypedArray()
+    }
+
+    protected fun connectorParamsByConfigFileInPathArgs(): Array<String> {
+        return arrayOf(
+            TaskArgs.INSTALLATION_ID.withDefaultValue(),
+            TaskArgs.CONFIG_PATH.withDefaultValue()
+        ).toList().toTypedArray()
+    }
+
+    protected fun connectorParamsByConfigFileArgs(): Array<String> {
+        return arrayOf(
+            TaskArgs.INSTALLATION_ID.withDefaultValue()
+        ).toList().toTypedArray()
+    }
+
+    private fun writeConsumerProjectWithConfigTemplate(sdkConfigTemplatePath: String) {
+        val variables = mapOf(
+            "TEST_INSTALLATION_ID" to TaskArgs.INSTALLATION_ID.requireDefaultValue(),
+            "TEST_SCHEME" to TaskArgs.SCHEME.requireDefaultValue(),
+            "TEST_HOST" to TaskArgs.HOST.requireDefaultValue(),
+            "TEST_ACCESS_KEY" to TaskArgs.ACCESS_KEY.requireDefaultValue(),
+            "IGNORE_SSL" to TaskArgs.IGNORE_SSL.requireDefaultValue(),
+            "TEST_CONFIG_PATH" to escapeForKotlinString(TaskArgs.CONFIG_PATH.requireDefaultValue())
+        )
+        val sdkConfiguration = renderTemplate(loadTemplate(sdkConfigTemplatePath), variables)
+
+        writeFileFromTemplate("settings.gradle.kts", TEMPLATE_SETTINGS, variables)
+        writeFileFromTemplate(
+            "build.gradle.kts",
+            TEMPLATE_BUILD,
+            variables + mapOf("SDK_CONFIGURATION" to sdkConfiguration)
+        )
+    }
+
+    private fun writeFileFromTemplate(
+        relativePath: String,
+        templatePath: String,
+        variables: Map<String, String>
+    ) {
+        val destinationPath = testProjectDir.resolve(relativePath)
+        destinationPath.parent?.let { Files.createDirectories(it) }
+        val rendered = renderTemplate(loadTemplate(templatePath), variables)
+        Files.writeString(destinationPath, rendered)
+    }
+
+    private fun loadTemplate(path: String): String {
+        val stream = javaClass.classLoader.getResourceAsStream(path)
+            ?: throw IllegalStateException("Template not found: $path")
+        return stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+    }
+
+    private fun renderTemplate(template: String, variables: Map<String, String>): String {
+        var rendered = template
+        variables.forEach { (key, value) ->
+            rendered = rendered.replace("{{${key}}}", value)
+        }
+        return rendered
+    }
+
+    private fun escapeForKotlinString(value: String): String {
+        return value.replace("\\", "\\\\")
+    }
+
+    private fun deleteRecursively(path: Path) {
+        if (!Files.exists(path)) {
+            return
+        }
+
+        Files.walk(path)
+            .sorted(Comparator.reverseOrder())
+            .forEach { Files.deleteIfExists(it) }
+    }
+}
