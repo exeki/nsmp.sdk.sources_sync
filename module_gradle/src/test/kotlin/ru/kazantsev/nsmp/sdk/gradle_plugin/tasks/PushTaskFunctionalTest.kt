@@ -37,7 +37,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
-            TaskArgs.FORCE.flag,
+            TaskArgs.FORCE.withValue("true"),
             *connectorParamsDirectArgs()
         ).build()
 
@@ -54,7 +54,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
-            TaskArgs.FORCE.flag,
+            TaskArgs.FORCE.withValue("true"),
             *connectorParamsByConfigFileInPathArgs()
         ).build()
 
@@ -71,7 +71,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
-            TaskArgs.FORCE.flag,
+            TaskArgs.FORCE.withValue("true"),
             *connectorParamsByConfigFileArgs()
         ).build()
 
@@ -88,7 +88,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
-            TaskArgs.FORCE.flag
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
         assertTrue(result.output.contains("BUILD SUCCESSFUL"))
@@ -104,7 +104,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
-            TaskArgs.FORCE.flag
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
         assertTrue(result.output.contains("BUILD SUCCESSFUL"))
@@ -120,7 +120,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
-            TaskArgs.FORCE.flag
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
         assertTrue(result.output.contains("BUILD SUCCESSFUL"))
@@ -144,7 +144,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         val result = runner(
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1,testScript2"),
-            TaskArgs.FORCE.flag
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
         assertTrue(result.output.contains("BUILD SUCCESSFUL"))
@@ -159,7 +159,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         val result = runner(
             taskName,
             TaskArgs.MODULES.withValue("testModule1,testModule2"),
-            TaskArgs.FORCE.flag
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
         assertTrue(result.output.contains("BUILD SUCCESSFUL"))
@@ -177,7 +177,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1,testScript2"),
             TaskArgs.MODULES.withValue("testModule1,testModule2"),
-            TaskArgs.FORCE.flag
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
         assertTrue(result.output.contains("BUILD SUCCESSFUL"))

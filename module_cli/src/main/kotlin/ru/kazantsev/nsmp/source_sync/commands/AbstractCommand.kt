@@ -15,9 +15,6 @@ abstract class AbstractCommand(
     name: String,
     description: String
 ) : Subcommand(name, description) {
-    companion object {
-        private val ALLOWED_LOG_LEVELS = setOf("trace", "debug", "info", "warn", "error")
-    }
 
     protected val installationId by option(
         ArgType.String,
@@ -49,11 +46,11 @@ abstract class AbstractCommand(
         description = "Access key for installation"
     ).default("")
 
-    protected val ignoreSsl by option(
-        ArgType.Boolean,
+    private val ignoreSslRaw by option(
+        ArgType.String,
         fullName = "ignoreSsl",
-        description = "Ignore SSL"
-    ).default(false)
+        description = "Ignore SSL (true|false)"
+    ).default("false")
 
     protected val projectPath by option(
         ArgType.String,
@@ -85,6 +82,9 @@ abstract class AbstractCommand(
     protected val modules: List<String>
         get() = parseCsv(modulesCsv)
 
+    protected val ignoreSsl: Boolean
+        get() = parseBooleanOption("ignoreSsl", ignoreSslRaw)
+
     protected fun createConnectorParams(): ConnectorParams {
         return if (installationId.isNotEmpty() && configPath.isNotEmpty()) {
             ConnectorParams.byConfigFileInPath(installationId, configPath)
@@ -95,11 +95,6 @@ abstract class AbstractCommand(
     }
 
     protected fun getService(): SrcService {
-        val normalizedLogLevel = logLevel.lowercase()
-        require(normalizedLogLevel in ALLOWED_LOG_LEVELS) {
-            "Unsupported --log-level: $logLevel. Allowed values: ${ALLOWED_LOG_LEVELS.joinToString(", ")}"
-        }
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", normalizedLogLevel)
         val connector = SrcConnector(createConnectorParams())
         val projectPath = Paths.get(projectPath)
         return SrcService(connector, ObjectMapper(), projectPath)
@@ -109,5 +104,13 @@ abstract class AbstractCommand(
         return value.split(',')
             .map { it.trim() }
             .filter { it.isNotEmpty() }
+    }
+
+    protected fun parseBooleanOption(name: String, value: String): Boolean {
+        return when (value.lowercase()) {
+            "true" -> true
+            "false" -> false
+            else -> throw IllegalArgumentException("Option --$name must be 'true' or 'false', but was '$value'")
+        }
     }
 }

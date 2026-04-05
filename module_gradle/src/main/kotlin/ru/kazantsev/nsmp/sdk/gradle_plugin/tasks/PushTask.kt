@@ -15,7 +15,7 @@ abstract class PushTask : AbstractTask() {
     @get:Input
     @get:Optional
     @get:Option(option = "force", description = "Skip src checksum validation")
-    abstract val force: Property<Boolean>
+    abstract val force: Property<String>
 
     init {
         description = "Pushes local sources to NSMP. Use --scripts and --modules, for example: --scripts=a,b --modules=c,d"
@@ -27,7 +27,7 @@ abstract class PushTask : AbstractTask() {
         srcService.push(
             parseCsvOption(scripts.orNull),
             parseCsvOption(modules.orNull),
-            force.orNull == true
+            parseBooleanOption("force", force.orNull ?: "false")
         )
     }
 }

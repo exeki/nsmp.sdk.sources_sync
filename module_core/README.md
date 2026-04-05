@@ -2,17 +2,24 @@
 
 Библиотека с основной логикой синхронизации исходников NSMP.
 
-## Maven coordinates
-
-```text
-ru.kazantsev.nsmp.sdk.sources_sync:core:1.0.0
-```
-
 ## Подключение
 
 Gradle Kotlin DSL:
 
+`build.gradle.kts`:
+
 ```kotlin
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/exeki/*")
+        credentials {
+            username = System.getenv("GITHUB_USERNAME")
+            password = System.getenv("GITHUB_TOKEN")
+        } 
+    }
+}
+
 dependencies {
     implementation("ru.kazantsev.nsmp.sdk.sources_sync:core:1.0.0")
 }
@@ -23,16 +30,10 @@ dependencies {
 Класс: `ru.kazantsev.nsmp.sdk.sources_sync.SrcService`
 
 Методы:
+
 - `pull(scripts, modules)`
 - `push(scripts, modules, force)`
 - `syncCheck(scripts, modules)`
-
-`SrcService` работает с директориями проекта:
-- `src/main/scripts`
-- `src/main/modules`
-
-и файлом локальной информации:
-- `.smp_sdk/src_info.json`
 
 ## Минимальный пример
 
@@ -47,9 +48,10 @@ val params = ConnectorParams.byConfigFile("EXEKI1")
 val service = SrcService(
     SrcConnector(params),
     ObjectMapper(),
-    Paths.get(".")
+    Paths.get("/my_project")
 )
 
+//Скачает и сохранит исходники
 service.pull(
     scripts = listOf("testScript1"),
     modules = listOf("testModule1")

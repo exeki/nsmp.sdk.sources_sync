@@ -46,7 +46,7 @@ abstract class AbstractTask : DefaultTask() {
     @get:Input
     @get:Optional
     @get:Option(option = "ignoreSsl", description = "Ignore SSL validation")
-    abstract val ignoreSsl: Property<Boolean>
+    abstract val ignoreSsl: Property<String>
 
     @get:Input
     @get:Optional
@@ -67,7 +67,7 @@ abstract class AbstractTask : DefaultTask() {
                 scheme.get(),
                 host.get(),
                 accessKey.get(),
-                ignoreSsl.orNull ?: false
+                parseBooleanOption("ignoreSsl", ignoreSsl.orNull ?: "false")
             )
         } else if (installationId.isPresent) {
             ConnectorParams.byConfigFile(installationId.get())
@@ -94,6 +94,14 @@ abstract class AbstractTask : DefaultTask() {
             .split(',')
             .map { it.trim() }
             .filter { it.isNotEmpty() }
+    }
+
+    protected fun parseBooleanOption(name: String, value: String): Boolean {
+        return when (value.lowercase()) {
+            "true" -> true
+            "false" -> false
+            else -> throw IllegalArgumentException("Option --$name must be 'true' or 'false', but was '$value'")
+        }
     }
 
     init {

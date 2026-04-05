@@ -1,6 +1,9 @@
 # module_gradle
 
 Gradle-плагин для задач синхронизации исходников NSMP.
+При подключении объявляет source sets:
+- `src/main/scrips`
+- `src/main/modules`
 
 ## Maven coordinates
 
@@ -11,7 +14,7 @@ ru.kazantsev.nsmp.sdk.sources_sync:gradle:1.0.0
 ## Plugin id
 
 ```text
-gradle
+nsmp_sdk_sources_sync_gradle
 ```
 
 ## Подключение плагина
@@ -24,6 +27,15 @@ pluginManagement {
         mavenLocal()
         mavenCentral()
         gradlePluginPortal()
+        //именно в этом репозитории лежит плагин, все остальные чисто что бы были не терялись
+        maven {
+            name = "exekiGithubRepo"
+            url = uri("https://maven.pkg.github.com/exeki/*")
+            credentials {
+                username = System.getenv("GITHUB_USERNAME")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 ```
@@ -32,7 +44,7 @@ pluginManagement {
 
 ```kotlin
 plugins {
-    id("gradle") version "1.0.0"
+    id("nsmp_sdk_sources_sync_gradle") version "1.0.0"
 }
 ```
 
@@ -54,24 +66,43 @@ nsmpSdkSourcesSync {
 
 ## Задачи
 
-- `pull`
-- `push`
-- `syncCheck`
+- `pull` - получить исходники из инсталляции
+- `push` - загрузить исходники в инсталляцию 
+- `syncCheck` - проверить, были ли модифицированы исходники в инсталляции с момента последнего pull
 
-Общие CLI-опции задач:
-- `--installationId`
-- `--configPath`
-- `--scheme`
-- `--host`
-- `--accessKey`
+### Общие CLI-опции задач:
+
+Все опции строковые, флагов нет.
+
+#### Опции инсталляции:
+
+Система указания инсталляции наследуется от библиотеки [nsmp.basic_api_connector](https://github.com/exeki/nsmp.basic_api_connector), так что порядок передачи параметров инсталляции можно понять оттуда.
+Кратко по опциям:
+1. самое простое - создайте конфигурационный файл по стандартному пути, описанный в `nsmp.basic_api_connector`, при вызове команды укажите только ID инсталляции.
+2. не хочется помещать по стандартному пути? Создайте где угодно, при вызове команды передавайте ID инсталляции и путь до конфигурационного файла.
+3. не хочется делать конфигурационный файл вообще? При вызове команды передайте все параметры инсталляции вручную.
+
+Все опции инсталляции могут быть заданы через gradle build extension.
+
+- `--installationId` 
+- `--configPath` 
+- `--scheme` 
+- `--host` 
+- `--accessKey` 
 - `--ignoreSsl`
-- `--scripts` (через запятую)
-- `--modules` (через запятую)
 
-Дополнительно для `push`:
-- `--force`
+#### Опции исходников:
+
+- `--scripts` - коды модулей через запятую
+- `--modules` - коды модулей через запятую
+
+#### Дополнительно для `push`:
+
+- `--force` - пропустить syncCheck при загрузке исходников на инсталляцию
 
 ## Примеры запуска задач
+
+В указанных примерах опции инсталляции заданы через extension.
 
 ```bash
 ./gradlew pull --scripts=testScript1,testScript2 --modules=testModule1

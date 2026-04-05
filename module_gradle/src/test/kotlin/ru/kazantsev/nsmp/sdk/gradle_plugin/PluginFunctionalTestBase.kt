@@ -60,7 +60,7 @@ abstract class PluginFunctionalTestBase {
             TaskArgs.SCHEME.withDefaultValue(),
             TaskArgs.HOST.withDefaultValue(),
             TaskArgs.ACCESS_KEY.withDefaultValue(),
-            TaskArgs.IGNORE_SSL.flag
+            TaskArgs.IGNORE_SSL.withDefaultValue()
         ).toList().toTypedArray()
     }
 

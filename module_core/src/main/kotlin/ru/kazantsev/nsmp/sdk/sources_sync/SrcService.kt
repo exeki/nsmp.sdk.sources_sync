@@ -102,7 +102,7 @@ class SrcService(
                     )
                 }
             }
-        }
+        } else log.warn("force push enabled!")
         val srcArchive = srcArchiveService.buildSrcArchive(
             requestedScripts,
             requestedModules,

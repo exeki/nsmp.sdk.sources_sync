@@ -18,7 +18,6 @@ abstract class CommandFunctionalTestBase {
 
     companion object {
         private const val CLEAN_TEST_PROJECT_DIR = true
-        private val BOOLEAN_FLAGS = setOf("--ignoreSsl", "--force")
     }
 
     lateinit var testProjectDir: Path
@@ -39,6 +38,7 @@ abstract class CommandFunctionalTestBase {
         val fullArgs = mutableListOf<String>()
         fullArgs += command
         fullArgs += splitOptionArgument(CommandArgs.PROJECT_PATH.withValue(testProjectDir.toString()))
+        fullArgs += splitOptionArgument(CommandArgs.LOG_LEVEL.withValue("debug"))
         args.forEach { arg ->
             fullArgs += splitOptionArgument(arg)
         }
@@ -57,13 +57,6 @@ abstract class CommandFunctionalTestBase {
         if (equalsIndex <= 2 || equalsIndex == arg.lastIndex) return listOf(arg)
         val option = arg.substring(0, equalsIndex)
         val value = arg.substring(equalsIndex + 1)
-        if (option in BOOLEAN_FLAGS) {
-            return when (value.lowercase()) {
-                "true" -> listOf(option)
-                "false" -> emptyList()
-                else -> listOf(option, value)
-            }
-        }
         return listOf(option, value)
     }
 

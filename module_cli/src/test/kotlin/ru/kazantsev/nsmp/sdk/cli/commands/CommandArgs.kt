@@ -10,7 +10,7 @@ enum class CommandArgs(
     CONFIG_PATH("configPath", ConnectorParams.getDefaultParamsFilePath()),
     SCHEME("scheme", "https"),
     HOST("host", "nsd1.exeki.local"),
-    ACCESS_KEY("accessKey", "69f8d9c0-56bd-4c87-8010-4a95e2cb4b14"),
+    ACCESS_KEY("accessKey", ConnectorParams.byConfigFile(INSTALLATION_ID.defaultValue).accessKey),
     IGNORE_SSL("ignoreSsl", "true"),
     PROJECT_PATH("projectPath"),
     LOG_LEVEL("log-level", "info"),

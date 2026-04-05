@@ -44,7 +44,7 @@ class Plugin : Plugin<Project> {
         ).configureRemote(extension, providers) {
             //scripts.convention("")
             //modules.convention("")
-            force.convention(false)
+            force.convention("false")
         }
     }
 }

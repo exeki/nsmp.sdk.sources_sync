@@ -11,7 +11,7 @@ kotlin {
 gradlePlugin {
     plugins {
         create("sourcesSyncPlugin") {
-            id = project.name
+            id = "nsmp_sdk_sources_sync"
             version = project.version
             group = project.group
             implementationClass = "ru.kazantsev.nsmp.sdk.gradle_plugin.Plugin"

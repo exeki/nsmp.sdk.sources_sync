@@ -8,6 +8,7 @@ class SyncCheckCommand : AbstractCommand(
     "Checks that downloaded sources were not modified on the installation since they were fetched."
 ) {
     override fun execute() {
+        println("Executing syncCheck command...")
         val diff = getService().syncCheck(scripts, modules)
         if (diff.scripts.isNotEmpty() || diff.modules.isNotEmpty()) {
             println("Src not in sync:")
