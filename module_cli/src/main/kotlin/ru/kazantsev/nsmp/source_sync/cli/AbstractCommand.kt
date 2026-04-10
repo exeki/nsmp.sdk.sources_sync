@@ -1,4 +1,4 @@
-package ru.kazantsev.nsmp.source_sync.commands
+package ru.kazantsev.nsmp.source_sync.cli
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.cli.ArgType

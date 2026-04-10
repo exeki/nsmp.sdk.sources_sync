@@ -1,12 +1,12 @@
-package ru.kazantsev.nsmp.sdk.gradle_plugin.tasks
+package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import ru.kazantsev.nsmp.sdk.gradle_plugin.PluginFunctionalTestBase
+import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.PluginFunctionalTestBase
 
-class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
+class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
-    override val taskName: String = PullTask.NAME
+    override val taskName: String = PushTask.NAME
 
     @Test
     override fun checkExists() {
@@ -27,93 +27,106 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         assertTrue(result.output.contains(TaskArgs.ALL_SCRIPTS.flag))
         assertTrue(result.output.contains(TaskArgs.ALL_MODULES.flag))
         assertTrue(result.output.contains(TaskArgs.ALL_ADV_IMPORTS.flag))
+        assertTrue(result.output.contains(TaskArgs.FORCE.flag))
     }
 
     @Test
     override fun checkCliConnectorParamsDirect() {
         writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalScript("testScript1")
+        createLocalModule("testModule1")
 
-        runner(
+        val result = runner(
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
+            TaskArgs.FORCE.withValue("true"),
             *connectorParamsDirectArgs()
         ).build()
 
-        assertPulledScriptExists("testScript1")
-        assertPulledModuleExists("testModule1")
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
     @Test
     override fun checkCliConnectorParamsByConfigFileInPath() {
         writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalScript("testScript1")
+        createLocalModule("testModule1")
 
-        runner(
+        val result = runner(
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
+            TaskArgs.FORCE.withValue("true"),
             *connectorParamsByConfigFileInPathArgs()
         ).build()
 
-        assertPulledScriptExists("testScript1")
-        assertPulledModuleExists("testModule1")
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
     @Test
     override fun checkCliConnectorParamsByConfigFile() {
         writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalScript("testScript1")
+        createLocalModule("testModule1")
 
-        runner(
+        val result = runner(
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
             TaskArgs.MODULES.withValue("testModule1"),
+            TaskArgs.FORCE.withValue("true"),
             *connectorParamsByConfigFileArgs()
         ).build()
 
-        assertPulledScriptExists("testScript1")
-        assertPulledModuleExists("testModule1")
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
     @Test
     override fun checkExtensionConnectorParamsDirect() {
         writeConsumerProject()
+        createLocalScript("testScript1")
+        createLocalModule("testModule1")
 
-        runner(
+        val result = runner(
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
-            TaskArgs.MODULES.withValue("testModule1")
+            TaskArgs.MODULES.withValue("testModule1"),
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
-        assertPulledScriptExists("testScript1")
-        assertPulledModuleExists("testModule1")
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
     @Test
     override fun checkExtensionConnectorParamsByConfigFileInPath() {
         writeConsumerProjectWithConfigInPath()
+        createLocalScript("testScript1")
+        createLocalModule("testModule1")
 
-        runner(
+        val result = runner(
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
-            TaskArgs.MODULES.withValue("testModule1")
+            TaskArgs.MODULES.withValue("testModule1"),
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
-        assertPulledScriptExists("testScript1")
-        assertPulledModuleExists("testModule1")
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
     @Test
     override fun checkExtensionConnectorParamsByConfigFile() {
         writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalScript("testScript1")
+        createLocalModule("testModule1")
 
-        runner(
+        val result = runner(
             taskName,
             TaskArgs.SCRIPTS.withValue("testScript1"),
-            TaskArgs.MODULES.withValue("testModule1")
+            TaskArgs.MODULES.withValue("testModule1"),
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
-        assertPulledScriptExists("testScript1")
-        assertPulledModuleExists("testModule1")
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
     @Test
@@ -128,91 +141,92 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkScriptsExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalScript("testScript1")
+        createLocalScript("testScript2")
 
-        runner(
+        val result = runner(
             taskName,
-            TaskArgs.SCRIPTS.withValue("testScript1,testScript2")
+            TaskArgs.SCRIPTS.withValue("testScript1,testScript2"),
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
-        assertPulledScriptExists("testScript1")
-        assertPulledScriptExists("testScript2")
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
     @Test
     override fun checkModulesExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalModule("testModule1")
+        createLocalModule("testModule2")
 
         val result = runner(
             taskName,
-            TaskArgs.MODULES.withValue("testModule1,testModule2")
+            TaskArgs.MODULES.withValue("testModule1,testModule2"),
+            TaskArgs.FORCE.withValue("true")
         ).build()
 
         assertTrue(result.output.contains("BUILD SUCCESSFUL"))
-        assertPulledModuleExists("testModule1")
-        assertPulledModuleExists("testModule2")
-    }
-
-    @Test
-    override fun checkAllModulesExecution() {
-        writeConsumerProjectWithInstallationOnlyConfig()
-
-        runner(
-            taskName,
-            TaskArgs.ALL_MODULES.withValue("true")
-        ).build()
-
-        assertPulledModuleExists("testModule1")
-    }
-
-    @Test
-    override fun checkAllScriptsExecution() {
-        writeConsumerProjectWithInstallationOnlyConfig()
-
-        runner(
-            taskName,
-            TaskArgs.ALL_SCRIPTS.withValue("true")
-        ).build()
-
-        assertPulledScriptExists("testScript1")
-    }
-
-    @Test
-    override fun checkAllAdvImportsExecution() {
-        writeConsumerProjectWithInstallationOnlyConfig()
-
-        runner(
-            taskName,
-            TaskArgs.ALL_ADV_IMPORTS.withValue("true")
-        ).build()
-
-        assertPulledAdvImportExists("testImport1")
     }
 
     @Test
     override fun checkFullExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
-
-        runner(
-            taskName,
-            TaskArgs.SCRIPTS.withValue("testScript1,testScript2"),
-            TaskArgs.MODULES.withValue("testModule1,testModule2")
-        ).build()
-
-        assertPulledScriptExists("testScript1")
-        assertPulledScriptExists("testScript2")
-        assertPulledModuleExists("testModule1")
-        assertPulledModuleExists("testModule2")
-    }
-
-    @Test
-    fun failsWhenModuleDoesNotExist() {
-        writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalScript("testScript1")
+        createLocalScript("testScript2")
+        createLocalModule("testModule1")
+        createLocalModule("testModule2")
 
         val result = runner(
             taskName,
-            TaskArgs.MODULES.withValue("module_does_not_exist_7f3b9b16")
-        ).buildAndFail()
+            TaskArgs.SCRIPTS.withValue("testScript1,testScript2"),
+            TaskArgs.MODULES.withValue("testModule1,testModule2"),
+            TaskArgs.FORCE.withValue("true")
+        ).build()
 
-        assertTrue(result.output.contains("BUILD FAILED"))
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
+    }
+
+    @Test
+    override fun checkAllModulesExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalModule("testModule1")
+        createLocalModule("testModule2")
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_MODULES.withValue("true"),
+            TaskArgs.FORCE.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
+    }
+
+    @Test
+    override fun checkAllScriptsExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalScript("testScript1")
+        createLocalScript("testScript2")
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_SCRIPTS.withValue("true"),
+            TaskArgs.FORCE.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
+    }
+
+    @Test
+    override fun checkAllAdvImportsExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalAdvImport("testImport1")
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_ADV_IMPORTS.withValue("true"),
+            TaskArgs.FORCE.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 }

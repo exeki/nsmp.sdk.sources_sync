@@ -3,9 +3,9 @@ package ru.kazantsev.nsmp.sdk
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ExperimentalCli
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.source_sync.commands.PullCommand
-import ru.kazantsev.nsmp.source_sync.commands.PushCommand
-import ru.kazantsev.nsmp.source_sync.commands.SyncCheckCommand
+import ru.kazantsev.nsmp.source_sync.cli.PullCommand
+import ru.kazantsev.nsmp.source_sync.cli.PushCommand
+import ru.kazantsev.nsmp.source_sync.cli.SyncCheckCommand
 import java.io.PrintStream
 import kotlin.system.exitProcess
 

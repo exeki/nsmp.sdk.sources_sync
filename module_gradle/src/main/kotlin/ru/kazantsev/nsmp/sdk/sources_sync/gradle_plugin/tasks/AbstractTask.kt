@@ -1,4 +1,4 @@
-﻿package ru.kazantsev.nsmp.sdk.gradle_plugin.tasks
+﻿package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.gradle.api.DefaultTask

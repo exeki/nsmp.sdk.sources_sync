@@ -1,4 +1,4 @@
-package ru.kazantsev.nsmp.sdk.gradle_plugin.tasks
+package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks
 
 import org.gradle.api.tasks.TaskAction
 

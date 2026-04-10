@@ -1,11 +1,12 @@
-package ru.kazantsev.nsmp.sdk.gradle_plugin
+package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeEach
-import ru.kazantsev.nsmp.sdk.gradle_plugin.tasks.TaskArgs
+import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.TaskArgs
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.test.assertTrue
 
 abstract class PluginFunctionalTestBase {
 
@@ -130,7 +131,7 @@ abstract class PluginFunctionalTestBase {
         val found = Files.walk(scriptsRoot).use { pathStream ->
             pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy" }
         }
-        kotlin.test.assertTrue(found, "Expected script file for code=$code in $scriptsRoot")
+        assertTrue(found, "Expected script file for code=$code in $scriptsRoot")
     }
 
     protected fun assertPulledModuleExists(code: String) {
@@ -138,7 +139,7 @@ abstract class PluginFunctionalTestBase {
         val found = Files.walk(modulesRoot).use { pathStream ->
             pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy" }
         }
-        kotlin.test.assertTrue(found, "Expected module file for code=$code in $modulesRoot")
+        assertTrue(found, "Expected module file for code=$code in $modulesRoot")
     }
 
     protected fun assertPulledAdvImportExists(code: String) {
@@ -146,7 +147,7 @@ abstract class PluginFunctionalTestBase {
         val found = Files.walk(resourcesRoot).use { pathStream ->
             pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.xml" }
         }
-        kotlin.test.assertTrue(found, "Expected adv import file for code=$code in $resourcesRoot")
+        assertTrue(found, "Expected adv import file for code=$code in $resourcesRoot")
     }
 
     protected fun createLocalScript(code: String) {

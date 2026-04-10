@@ -1,4 +1,4 @@
-package ru.kazantsev.nsmp.sdk.gradle_plugin
+package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin
 
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 

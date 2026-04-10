@@ -1,4 +1,4 @@
-package ru.kazantsev.nsmp.sdk.gradle_plugin
+package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -6,10 +6,10 @@ import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
-import ru.kazantsev.nsmp.sdk.gradle_plugin.tasks.SyncCheckTask
-import ru.kazantsev.nsmp.sdk.gradle_plugin.tasks.PullTask
-import ru.kazantsev.nsmp.sdk.gradle_plugin.tasks.AbstractTask
-import ru.kazantsev.nsmp.sdk.gradle_plugin.tasks.PushTask
+import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.SyncCheckTask
+import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.PullTask
+import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.AbstractTask
+import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.PushTask
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
 
 class Plugin : Plugin<Project> {
