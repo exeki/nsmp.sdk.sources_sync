@@ -8,6 +8,7 @@ import ru.kazantsev.nsmp.basic_api_connector.Connector
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.basic_api_connector.HttpException
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 
 /**
  * Коннектор к NSMP
@@ -29,8 +30,7 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
         }
     }
 
-    fun getSrc(scripts: List<String>, modules: List<String>): ByteArray {
-        val body = mapOf("scripts" to scripts, "modules" to modules)
+    fun getSrc(body : SrcRequest): ByteArray {
         val httpEntity = StringEntity(objectMapper.writeValueAsString(body), ContentType.APPLICATION_JSON)
         val response = this.execPost(
             httpEntity,
@@ -44,8 +44,7 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
         }
     }
 
-    fun getSrcInfo(scripts: List<String>, modules: List<String>): SrcInfoRoot {
-        val body = mapOf("scripts" to scripts, "modules" to modules)
+    fun getSrcInfo(body : SrcRequest): SrcInfoRoot {
         val httpEntity = StringEntity(objectMapper.writeValueAsString(body), ContentType.APPLICATION_JSON)
         val response = this.execPost(
             httpEntity,

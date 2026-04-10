@@ -8,7 +8,6 @@ import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -16,8 +15,8 @@ import java.util.zip.ZipOutputStream
 /**
  * Сервис для работы с архивом `src`: упаковка, распаковка и преобразование checksum-ответа.
  */
-class SrcArchiveService (
-    private val objectMapper : ObjectMapper
+class SrcArchiveService(
+    private val objectMapper: ObjectMapper
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -31,8 +30,10 @@ class SrcArchiveService (
     fun buildSrcArchive(
         scripts: List<SrcFileDto>,
         modules: List<SrcFileDto>,
+        advImports: List<SrcFileDto>,
         scriptsSrcFolder: SrcFolder,
-        modulesSrcFolder: SrcFolder
+        modulesSrcFolder: SrcFolder,
+        advImportsSrcFolder: SrcFolder,
     ): ByteArray {
         log.debug("Build archive started: scripts={}, modules={}", scripts.size, modules.size)
         val outputStream = ByteArrayOutputStream()
@@ -40,6 +41,12 @@ class SrcArchiveService (
         ZipOutputStream(outputStream).use { zipOutputStream ->
             writeSourcesToArchive(zipOutputStream, scriptsSrcFolder, "$SRC_PUSH_ARCHIVE_ROOT/scripts", scripts)
             writeSourcesToArchive(zipOutputStream, modulesSrcFolder, "$SRC_PUSH_ARCHIVE_ROOT/modules", modules)
+            writeSourcesToArchive(
+                zipOutputStream,
+                advImportsSrcFolder,
+                "$SRC_PUSH_ARCHIVE_ROOT/scripts/advimport",
+                advImports
+            )
         }
 
         val archive = outputStream.toByteArray()
@@ -54,6 +61,7 @@ class SrcArchiveService (
         log.debug("Unpack archive started: size={} bytes", srcArchive.size)
         val scriptTexts = mutableMapOf<String, String>()
         val moduleTexts = mutableMapOf<String, String>()
+        val advImportTexts = mutableMapOf<String, String>()
         var info: SrcInfoRoot? = null
 
         ZipInputStream(ByteArrayInputStream(srcArchive)).use { zis ->
@@ -75,6 +83,11 @@ class SrcArchiveService (
                     normalizedEntryName.startsWith("scripts/") -> {
                         val code = normalizedEntryName.substringAfterLast('/').substringBefore('.')
                         scriptTexts[code] = String(zis.readBytes(), Charsets.UTF_8)
+                    }
+
+                    normalizedEntryName.startsWith("advImports/") -> {
+                        val code = normalizedEntryName.substringAfterLast('/').substringBefore('.')
+                        advImportTexts[code] = String(zis.readBytes(), Charsets.UTF_8)
                     }
 
                     normalizedEntryName == "info.json" -> {
@@ -100,11 +113,22 @@ class SrcArchiveService (
             modules = srcInfo.modules.map {
                 SrcDto(
                     info = it,
-                    text = moduleTexts[it.code] ?: throw Exception("Module test ${it.code} not found")
+                    text = moduleTexts[it.code] ?: throw Exception("Module text ${it.code} not found")
+                )
+            },
+            advImports = srcInfo.advImports.map {
+                SrcDto(
+                    info = it,
+                    text = advImportTexts[it.code] ?: throw Exception("AdvImport text ${it.code} not found")
                 )
             }
         )
-        log.debug("Unpack archive completed: scripts={}, modules={}", result.scripts.size, result.modules.size)
+        log.debug(
+            "Unpack archive completed: scripts={}, modules={}, advImports={}",
+            result.scripts.size,
+            result.modules.size,
+            result.advImports.size
+        )
         return result
     }
 
@@ -115,9 +139,8 @@ class SrcArchiveService (
         sources: List<SrcFileDto>
     ) {
         sources.forEach { source ->
-            val relativePath = srcFolder.getPath().toPath().relativize(source.file.toPath()).toString()
-                .replace(File.separatorChar, '/')
-            val entryName = "$archiveRoot/$relativePath"
+            //val relativePath = srcFolder.getPath().toPath().relativize(source.file.toPath()).toString().replace(File.separatorChar, '/')
+            val entryName = "$archiveRoot/${source.code}/${srcFolder.format}"
 
             zipOutputStream.putNextEntry(ZipEntry(entryName))
             source.file.inputStream().use { inputStream ->

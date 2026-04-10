@@ -11,4 +11,7 @@ interface ICommandTest {
     fun checkScriptsExecution()
     fun checkModulesExecution()
     fun checkFullExecution()
+    fun checkAllModulesExecution()
+    fun checkAllScriptsExecution()
+    fun checkAllAdvImportsExecution()
 }

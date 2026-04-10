@@ -61,4 +61,19 @@ interface ITaskTest {
      * Задать installationId через extension, вызвать задачу передав в нее пару кодов модулей и пару кодов скриптов
      */
     fun checkFullExecution()
+
+    /**
+     * Передать в запрос параметр allModules - true
+     */
+    fun checkAllModulesExecution()
+
+    /**
+     * Передать в запрос параметр allScripts - true
+     */
+    fun checkAllScriptsExecution()
+
+    /**
+     * Передать в запрос параметр allAdvImports - true
+     */
+    fun checkAllAdvImportsExecution()
 }

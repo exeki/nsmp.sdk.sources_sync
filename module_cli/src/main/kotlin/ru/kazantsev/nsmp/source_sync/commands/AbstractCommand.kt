@@ -8,6 +8,7 @@ import kotlinx.cli.default
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 import java.nio.file.Paths
 
 @OptIn(ExperimentalCli::class)
@@ -76,11 +77,29 @@ abstract class AbstractCommand(
         description = "Module codes separated by comma"
     ).default("")
 
-    protected val scripts: List<String>
-        get() = parseCsv(scriptsCsv)
+    private val advImportsCsv by option(
+        ArgType.String,
+        fullName = "advImports",
+        description = "Advanced import codes separated by comma"
+    ).default("")
 
-    protected val modules: List<String>
-        get() = parseCsv(modulesCsv)
+    private val allModulesRaw by option(
+        ArgType.String,
+        fullName = "allModules",
+        description = "Use all local modules (true|false)"
+    ).default("false")
+
+    private val allScriptsRaw by option(
+        ArgType.String,
+        fullName = "allScripts",
+        description = "Use all local scripts (true|false)"
+    ).default("false")
+
+    private val allAdvImportsRaw by option(
+        ArgType.String,
+        fullName = "allAdvImports",
+        description = "Use all local adv imports (true|false)"
+    ).default("false")
 
     protected val ignoreSsl: Boolean
         get() = parseBooleanOption("ignoreSsl", ignoreSslRaw)
@@ -98,6 +117,17 @@ abstract class AbstractCommand(
         val connector = SrcConnector(createConnectorParams())
         val projectPath = Paths.get(projectPath)
         return SrcService(connector, ObjectMapper(), projectPath)
+    }
+
+    protected fun createRequest(): SrcRequest {
+        return SrcRequest(
+            modules = parseCsv(modulesCsv),
+            allModules = parseBooleanOption("allModules", allModulesRaw),
+            scripts = parseCsv(scriptsCsv),
+            allScripts = parseBooleanOption("allScripts", allScriptsRaw),
+            advImports = parseCsv(advImportsCsv),
+            allAdvImports = parseBooleanOption("allAdvImports", allAdvImportsRaw)
+        )
     }
 
     private fun parseCsv(value: String): List<String> {

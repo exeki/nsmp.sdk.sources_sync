@@ -99,4 +99,37 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
         assertPulledModuleExists("testModule1")
         assertPulledModuleExists("testModule2")
     }
+
+    @Test
+    override fun checkAllModulesExecution() {
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_MODULES.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+        assertPulledModuleExists("testModule1")
+    }
+
+    @Test
+    override fun checkAllScriptsExecution() {
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_SCRIPTS.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+        assertPulledScriptExists("testScript1")
+    }
+
+    @Test
+    override fun checkAllAdvImportsExecution() {
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_ADV_IMPORTS.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+        assertPulledAdvImportExists("testImport1")
+    }
 }

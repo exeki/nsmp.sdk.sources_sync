@@ -16,7 +16,7 @@ repositories {
         credentials {
             username = System.getenv("GITHUB_USERNAME")
             password = System.getenv("GITHUB_TOKEN")
-        } 
+        }
     }
 }
 
@@ -31,19 +31,13 @@ dependencies {
 
 Методы:
 
-- `pull(scripts, modules)`
-- `push(scripts, modules, force)`
-- `syncCheck(scripts, modules)`
+- `pull()`
+- `push()`
+- `syncCheck()`
 
 ## Минимальный пример
 
 ```kotlin
-import com.fasterxml.jackson.databind.ObjectMapper
-import ru.kazantsev.nsd.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
-import java.nio.file.Paths
-
 val params = ConnectorParams.byConfigFile("EXEKI1")
 val service = SrcService(
     SrcConnector(params),
@@ -53,7 +47,13 @@ val service = SrcService(
 
 //Скачает и сохранит исходники
 service.pull(
-    scripts = listOf("testScript1"),
-    modules = listOf("testModule1")
+    SrcRequset(
+        modules = listOf("test2"),
+        allModules = false,
+        scripts = [],
+        allScripts = true,
+        advImports = listOf("test2"),
+        allAdvImports = false
+    )
 )
 ```

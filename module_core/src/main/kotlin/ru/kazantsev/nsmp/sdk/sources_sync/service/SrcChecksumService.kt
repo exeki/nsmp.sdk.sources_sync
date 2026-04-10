@@ -14,14 +14,17 @@ class SrcChecksumService {
      */
     fun compareSrcInfo(remoteSrcInfo: SrcInfoRoot, localSrcInfo: SrcInfoRoot): SrcInfoRoot {
         log.debug(
-            "Checksum compare started: remoteScripts={}, remoteModules={}, localScripts={}, localModules={}",
+            "Checksum compare started: remoteScripts={}, remoteModules={}, remoteAdvImports={}. localScripts={}, localModules={}, localAdvImports={}",
             remoteSrcInfo.scripts.size,
             remoteSrcInfo.modules.size,
+            remoteSrcInfo.advImports.size,
             localSrcInfo.scripts.size,
-            localSrcInfo.modules.size
+            localSrcInfo.modules.size,
+            localSrcInfo.advImports.size
         )
         val localScriptsByCode = localSrcInfo.scripts.associateBy { it.code }
         val localModulesByCode = localSrcInfo.modules.associateBy { it.code }
+        val localAdvImportsByCode = localSrcInfo.advImports.associateBy { it.code }
         val result = SrcInfoRoot(
             scripts = remoteSrcInfo.scripts.filter { remoteInfo ->
                 val localInfo = localScriptsByCode[remoteInfo.code]
@@ -30,9 +33,18 @@ class SrcChecksumService {
             modules = remoteSrcInfo.modules.filter { remoteInfo ->
                 val localInfo = localModulesByCode[remoteInfo.code]
                 localInfo == null || localInfo.checksum != remoteInfo.checksum
-            }
+            },
+            advImports = remoteSrcInfo.advImports.filter { remoteInfo ->
+                val localInfo = localAdvImportsByCode[remoteInfo.code]
+                localInfo == null || localInfo.checksum != remoteInfo.checksum
+            },
         )
-        log.debug("Checksum compare completed: changedScripts={}, changedModules={}", result.scripts.size, result.modules.size)
+        log.debug(
+            "Checksum compare completed: changedScripts={}, changedModules={}, changedAdvImports={}",
+            result.scripts.size,
+            result.modules.size,
+            result.advImports.size
+        )
         return result
     }
 }

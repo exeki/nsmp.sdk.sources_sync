@@ -3,7 +3,6 @@ package ru.kazantsev.nsmp.sdk.gradle_plugin.tasks
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.gradle_plugin.PluginFunctionalTestBase
-import java.nio.file.Files
 
 class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
@@ -24,6 +23,10 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         assertTrue(result.output.contains(TaskArgs.IGNORE_SSL.flag))
         assertTrue(result.output.contains(TaskArgs.SCRIPTS.flag))
         assertTrue(result.output.contains(TaskArgs.MODULES.flag))
+        assertTrue(result.output.contains(TaskArgs.ADV_IMPORTS.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_SCRIPTS.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_MODULES.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_ADV_IMPORTS.flag))
         assertTrue(result.output.contains(TaskArgs.FORCE.flag))
     }
 
@@ -132,7 +135,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
         val result = runner(taskName).buildAndFail()
 
-        assertTrue(result.output.contains("No sources found to upload"))
+        assertTrue(result.output.contains("Sources must be specified"))
     }
 
     @Test
@@ -183,29 +186,47 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
-    private fun createLocalScript(code: String) {
-        val scriptPath = testProjectDir.resolve("src/main/scripts/ru/kazantsev/demo/$code.groovy")
-        Files.createDirectories(scriptPath.parent)
-        Files.writeString(
-            scriptPath,
-            """
-            package ru.kazantsev.demo
-            
-            class $code {}
-            """.trimIndent()
-        )
+    @Test
+    override fun checkAllModulesExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalModule("testModule1")
+        createLocalModule("testModule2")
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_MODULES.withValue("true"),
+            TaskArgs.FORCE.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 
-    private fun createLocalModule(code: String) {
-        val modulePath = testProjectDir.resolve("src/main/modules/ru/kazantsev/demo/$code.groovy")
-        Files.createDirectories(modulePath.parent)
-        Files.writeString(
-            modulePath,
-            """
-            package ru.kazantsev.demo
-            
-            class $code {}
-            """.trimIndent()
-        )
+    @Test
+    override fun checkAllScriptsExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalScript("testScript1")
+        createLocalScript("testScript2")
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_SCRIPTS.withValue("true"),
+            TaskArgs.FORCE.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
+    }
+
+    @Test
+    override fun checkAllAdvImportsExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        createLocalAdvImport("testImport1")
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_ADV_IMPORTS.withValue("true"),
+            TaskArgs.FORCE.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("BUILD SUCCESSFUL"))
     }
 }

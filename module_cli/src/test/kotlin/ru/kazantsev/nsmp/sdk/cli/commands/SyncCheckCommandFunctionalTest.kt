@@ -55,7 +55,7 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("No sources found to sync check"))
+        assertTrue(result.stderr.contains("Sources must be specified"))
     }
 
     @Test
@@ -87,6 +87,39 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
             commandName,
             CommandArgs.SCRIPTS.withValue("testScript1,testScript2"),
             CommandArgs.MODULES.withValue("testModule1,testModule2"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    override fun checkAllModulesExecution() {
+        writeLocalInfoFile()
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_MODULES.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    override fun checkAllScriptsExecution() {
+        writeLocalInfoFile()
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_SCRIPTS.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    override fun checkAllAdvImportsExecution() {
+        writeLocalInfoFile()
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_ADV_IMPORTS.withValue("true"),
             *connectorArgsByConfigFile()
         )
         assertEquals(0, result.exitCode)

@@ -28,6 +28,10 @@ class Plugin : Plugin<Project> {
         ).configureRemote(extension, providers) {
             scripts.convention("")
             modules.convention("")
+            advImports.convention("")
+            allScripts.convention("false")
+            allModules.convention("false")
+            allAdvImports.convention("false")
         }
 
         project.tasks.register(
@@ -36,14 +40,22 @@ class Plugin : Plugin<Project> {
         ).configureRemote(extension, providers) {
             scripts.convention("")
             modules.convention("")
+            advImports.convention("")
+            allScripts.convention("false")
+            allModules.convention("false")
+            allAdvImports.convention("false")
         }
 
         project.tasks.register(
             PushTask.NAME,
             PushTask::class.java
         ).configureRemote(extension, providers) {
-            //scripts.convention("")
-            //modules.convention("")
+            scripts.convention("")
+            modules.convention("")
+            advImports.convention("")
+            allScripts.convention("false")
+            allModules.convention("false")
+            allAdvImports.convention("false")
             force.convention("false")
         }
     }
@@ -54,6 +66,7 @@ private fun configureSourceSets(project: Project) {
     val main = sourceSetContainer.maybeCreate(SourceSet.MAIN_SOURCE_SET_NAME)
     main.java.srcDir(SrcService.DEFAULT_MODULES_PATH)
     main.java.srcDir(SrcService.DEFAULT_SCRIPTS_PATH)
+    main.resources.srcDir(SrcService.DEFAULT_ADV_IMPORTS_PATH)
 }
 
 private fun <T : AbstractTask> TaskProvider<T>.configureRemote(

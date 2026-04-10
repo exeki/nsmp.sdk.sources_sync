@@ -18,15 +18,13 @@ abstract class PushTask : AbstractTask() {
     abstract val force: Property<String>
 
     init {
-        description = "Pushes local sources to NSMP. Use --scripts and --modules, for example: --scripts=a,b --modules=c,d"
+        description = "Pushes local sources to NSMP. Use --scripts/--modules/--advImports or --allScripts/--allModules/--allAdvImports"
     }
 
     @TaskAction
     fun action() {
-        val srcService = createService()
-        srcService.push(
-            parseCsvOption(scripts.orNull),
-            parseCsvOption(modules.orNull),
+        createService().push(
+            createRequest(),
             parseBooleanOption("force", force.orNull ?: "false")
         )
     }

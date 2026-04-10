@@ -97,6 +97,16 @@ abstract class CommandFunctionalTestBase {
         kotlin.test.assertTrue(found, "Expected module file for code=$code in $modulesRoot")
     }
 
+    protected fun assertPulledAdvImportExists(code: String) {
+        val advImportsRoot = testProjectDir.resolve("src/main/resources")
+        val found = Files.walk(advImportsRoot).use { pathStream ->
+            pathStream.anyMatch { path ->
+                Files.isRegularFile(path) && path.fileName.toString() == "$code.xml"
+            }
+        }
+        kotlin.test.assertTrue(found, "Expected adv import file for code=$code in $advImportsRoot")
+    }
+
     protected fun createLocalScript(code: String) {
         val scriptPath = testProjectDir.resolve("src/main/scripts/ru/kazantsev/demo/$code.groovy")
         Files.createDirectories(scriptPath.parent)
@@ -123,6 +133,17 @@ abstract class CommandFunctionalTestBase {
         )
     }
 
+    protected fun createLocalAdvImport(code: String) {
+        val advImportPath = testProjectDir.resolve("src/main/resources/advImports/$code.xml")
+        Files.createDirectories(advImportPath.parent)
+        Files.writeString(
+            advImportPath,
+            """
+            <import code="$code"/>
+            """.trimIndent()
+        )
+    }
+
     protected fun writeLocalInfoFile() {
         val infoPath = testProjectDir.resolve(".nsmp_sdk/src_info.json")
         Files.createDirectories(infoPath.parent)
@@ -133,15 +154,19 @@ abstract class CommandFunctionalTestBase {
               "scripts": [
                 {
                   "checksum": "local-test-script-checksum",
-                  "code": "testScript1",
-                  "type": "script"
+                  "code": "testScript1"
                 }
               ],
               "modules": [
                 {
                   "checksum": "local-test-module-checksum",
-                  "code": "testModule1",
-                  "type": "module"
+                  "code": "testModule1"
+                }
+              ],
+              "advImports": [
+                {
+                  "checksum": "local-test-adv-import-checksum",
+                  "code": "testImport1"
                 }
               ]
             }

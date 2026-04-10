@@ -3,7 +3,6 @@ package ru.kazantsev.nsmp.sdk.gradle_plugin.tasks
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.gradle_plugin.PluginFunctionalTestBase
-import java.nio.file.Files
 
 class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
@@ -24,6 +23,10 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         assertTrue(result.output.contains(TaskArgs.IGNORE_SSL.flag))
         assertTrue(result.output.contains(TaskArgs.SCRIPTS.flag))
         assertTrue(result.output.contains(TaskArgs.MODULES.flag))
+        assertTrue(result.output.contains(TaskArgs.ADV_IMPORTS.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_SCRIPTS.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_MODULES.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_ADV_IMPORTS.flag))
     }
 
     @Test
@@ -150,6 +153,42 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     }
 
     @Test
+    override fun checkAllModulesExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+
+        runner(
+            taskName,
+            TaskArgs.ALL_MODULES.withValue("true")
+        ).build()
+
+        assertPulledModuleExists("testModule1")
+    }
+
+    @Test
+    override fun checkAllScriptsExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+
+        runner(
+            taskName,
+            TaskArgs.ALL_SCRIPTS.withValue("true")
+        ).build()
+
+        assertPulledScriptExists("testScript1")
+    }
+
+    @Test
+    override fun checkAllAdvImportsExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+
+        runner(
+            taskName,
+            TaskArgs.ALL_ADV_IMPORTS.withValue("true")
+        ).build()
+
+        assertPulledAdvImportExists("testImport1")
+    }
+
+    @Test
     override fun checkFullExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
 
@@ -175,24 +214,5 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         ).buildAndFail()
 
         assertTrue(result.output.contains("BUILD FAILED"))
-    }
-
-    private fun assertPulledScriptExists(code: String) {
-        val scriptsRoot = testProjectDir.resolve("src/main/scripts")
-        val found = Files.walk(scriptsRoot).use { pathStream ->
-            pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy" }
-        }
-        assertTrue(found, "Expected script file for code=$code to be created in $scriptsRoot")
-    }
-
-    private fun assertPulledModuleExists(code: String) {
-        val modulesRoot = testProjectDir.resolve("src/main/modules")
-        val found = Files.walk(modulesRoot).use { pathStream ->
-            pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy" }
-        }
-        assertTrue(
-            found,
-            "Expected module file for code=$code to be created in $modulesRoot"
-        )
     }
 }

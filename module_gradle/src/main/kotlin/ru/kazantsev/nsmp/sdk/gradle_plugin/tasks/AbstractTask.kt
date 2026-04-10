@@ -11,6 +11,7 @@ import org.gradle.api.tasks.options.Option
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 import java.nio.file.Paths
 
 abstract class AbstractTask : DefaultTask() {
@@ -58,6 +59,26 @@ abstract class AbstractTask : DefaultTask() {
     @get:Option(option = "modules", description = "Module codes separated by comma")
     abstract val modules: Property<String>
 
+    @get:Input
+    @get:Optional
+    @get:Option(option = "advImports", description = "Advanced import codes separated by comma")
+    abstract val advImports: Property<String>
+
+    @get:Input
+    @get:Optional
+    @get:Option(option = "allModules", description = "Use all local modules")
+    abstract val allModules: Property<String>
+
+    @get:Input
+    @get:Optional
+    @get:Option(option = "allScripts", description = "Use all local scripts")
+    abstract val allScripts: Property<String>
+
+    @get:Input
+    @get:Optional
+    @get:Option(option = "allAdvImports", description = "Use all local advanced imports")
+    abstract val allAdvImports: Property<String>
+
     protected fun createConnectorParams(): ConnectorParams {
         return if (installationId.isPresent && configurationPath.isPresent) {
             ConnectorParams.byConfigFileInPath(installationId.get(), configurationPath.get())
@@ -102,6 +123,17 @@ abstract class AbstractTask : DefaultTask() {
             "false" -> false
             else -> throw IllegalArgumentException("Option --$name must be 'true' or 'false', but was '$value'")
         }
+    }
+
+    protected fun createRequest(): SrcRequest {
+        return SrcRequest(
+            modules = parseCsvOption(modules.orNull),
+            allModules = parseBooleanOption("allModules", allModules.orNull ?: "false"),
+            scripts = parseCsvOption(scripts.orNull),
+            allScripts = parseBooleanOption("allScripts", allScripts.orNull ?: "false"),
+            advImports = parseCsvOption(advImports.orNull),
+            allAdvImports = parseBooleanOption("allAdvImports", allAdvImports.orNull ?: "false")
+        )
     }
 
     init {

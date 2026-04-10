@@ -3,7 +3,6 @@ package ru.kazantsev.nsmp.sdk.gradle_plugin.tasks
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.gradle_plugin.PluginFunctionalTestBase
-import java.nio.file.Files
 
 class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
@@ -24,6 +23,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         assertTrue(result.output.contains(TaskArgs.IGNORE_SSL.flag))
         assertTrue(result.output.contains(TaskArgs.SCRIPTS.flag))
         assertTrue(result.output.contains(TaskArgs.MODULES.flag))
+        assertTrue(result.output.contains(TaskArgs.ADV_IMPORTS.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_SCRIPTS.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_MODULES.flag))
+        assertTrue(result.output.contains(TaskArgs.ALL_ADV_IMPORTS.flag))
     }
 
     @Test
@@ -122,12 +125,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkEmptyExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        Files.createDirectories(testProjectDir.resolve("src/main/scripts"))
-        Files.createDirectories(testProjectDir.resolve("src/main/modules"))
 
         val result = runner(taskName).buildAndFail()
 
-        assertTrue(result.output.contains("No sources found to sync check"))
+        assertTrue(result.output.contains("Sources must be specified"))
     }
 
     @Test
@@ -154,6 +155,45 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         ).build()
 
         assertTrue(result.output.contains("Changed module: testModule1"))
+    }
+
+    @Test
+    override fun checkAllModulesExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        writeLocalInfoFile()
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_MODULES.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("Changed module: testModule1"))
+    }
+
+    @Test
+    override fun checkAllScriptsExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        writeLocalInfoFile()
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_SCRIPTS.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("Changed script: testScript1"))
+    }
+
+    @Test
+    override fun checkAllAdvImportsExecution() {
+        writeConsumerProjectWithInstallationOnlyConfig()
+        writeLocalInfoFile()
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_ADV_IMPORTS.withValue("true")
+        ).build()
+
+        assertTrue(result.output.contains("Changed adv import: testImport1"))
     }
 
     @Test

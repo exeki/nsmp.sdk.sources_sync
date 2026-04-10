@@ -43,7 +43,22 @@ ru.kazantsev.nsmp.sdk.sources_sync:cli:{версия}
 - `--log-level` (`trace|debug|info|warn|error`) - уровень логирования. Старт и окончание команды пишутся просто в stdout.
 - `--scripts` - коды скриптов через запятую
 - `--modules` - коды модулей через запятую
+- `--advImports` - коды advanced imports через запятую
+- `--allScripts` - взять все локальные scripts (`true|false`)
+- `--allModules` - взять все локальные modules (`true|false`)
+- `--allAdvImports` - взять все локальные advImports (`true|false`)
 - `--force` - отключает sync check перед upload, применяется только в команде `push`
+
+### Boolean аргументы
+
+Boolean параметры передаются только строками:
+- `--ignoreSsl=true|false`
+- `--force=true|false`
+- `--allScripts=true|false`
+- `--allModules=true|false`
+- `--allAdvImports=true|false`
+
+Передача флагом без значения не используется.
 
 ## Примеры
 
@@ -74,8 +89,18 @@ java -jar module_cli/build/libs/cli-1.0.0.jar push \
   --scheme https \
   --host nsd1.exeki.local \
   --accessKey your-access-key \
-  --ignoreSsl \
+  --ignoreSsl=true \
   --scripts testScript1 \
   --modules testModule1 \
-  --force
+  --force=true
+```
+
+Пример с `all*` аргументами:
+
+```bash
+java -jar module_cli/build/libs/cli-1.0.0.jar syncCheck \
+  --installationId EXEKI1 \
+  --allScripts=true \
+  --allModules=true \
+  --allAdvImports=true
 ```

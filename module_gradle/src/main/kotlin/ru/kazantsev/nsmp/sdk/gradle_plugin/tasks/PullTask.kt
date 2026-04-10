@@ -9,18 +9,11 @@ abstract class PullTask : AbstractTask() {
     }
 
     init {
-        description = "Fetches sources from NSMP and stores them in project source sets. Use --scripts and --modules, for example: --scripts=a,b --modules=c,d"
+        description = "Fetches sources from NSMP and stores them in project source sets. Use --scripts/--modules/--advImports or --allScripts/--allModules/--allAdvImports"
     }
 
     @TaskAction
     fun action() {
-        val requestedScripts = parseCsvOption(scripts.orNull)
-        val requestedModules = parseCsvOption(modules.orNull)
-
-        val srcService = createService()
-        srcService.pull(
-            requestedScripts,
-            requestedModules
-        )
+        createService().pull(createRequest())
     }
 }

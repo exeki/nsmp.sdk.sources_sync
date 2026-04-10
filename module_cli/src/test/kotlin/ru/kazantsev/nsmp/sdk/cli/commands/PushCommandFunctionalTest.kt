@@ -61,7 +61,7 @@ class PushCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("No sources found to upload"))
+        assertTrue(result.stderr.contains("Sources must be specified"))
     }
 
     @Test
@@ -100,6 +100,44 @@ class PushCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
             commandName,
             CommandArgs.SCRIPTS.withValue("testScript1,testScript2"),
             CommandArgs.MODULES.withValue("testModule1,testModule2"),
+            CommandArgs.FORCE.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    override fun checkAllModulesExecution() {
+        createLocalModule("testModule1")
+        createLocalModule("testModule2")
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_MODULES.withValue("true"),
+            CommandArgs.FORCE.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    override fun checkAllScriptsExecution() {
+        createLocalScript("testScript1")
+        createLocalScript("testScript2")
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_SCRIPTS.withValue("true"),
+            CommandArgs.FORCE.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    override fun checkAllAdvImportsExecution() {
+        createLocalAdvImport("testImport1")
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_ADV_IMPORTS.withValue("true"),
             CommandArgs.FORCE.withValue("true"),
             *connectorArgsByConfigFile()
         )

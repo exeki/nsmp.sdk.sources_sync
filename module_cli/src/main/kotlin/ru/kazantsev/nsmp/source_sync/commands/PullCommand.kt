@@ -6,7 +6,7 @@ import kotlinx.cli.ExperimentalCli
 class PullCommand : AbstractCommand("pull", "Download source files from installation") {
     override fun execute() {
         println("Executing pull command...")
-        val fetched = getService().pull(scripts, modules)
-        println("Fetched scripts=${fetched.scripts.size}, modules=${fetched.modules.size}")
+        val fetched = getService().pull(createRequest())
+        println("Fetched scripts=${fetched.scripts.size}, modules=${fetched.modules.size}, advImports=${fetched.advImports.size}")
     }
 }

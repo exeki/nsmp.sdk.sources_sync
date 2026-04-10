@@ -14,6 +14,10 @@ enum class TaskArgs(
     IGNORE_SSL("ignoreSsl", "true"),
     SCRIPTS("scripts", "testScript1,testScript2"),
     MODULES("modules", "testModule1,testModule2"),
+    ADV_IMPORTS("advImports", "testImport1,testImport2"),
+    ALL_SCRIPTS("allScripts", "false"),
+    ALL_MODULES("allModules", "false"),
+    ALL_ADV_IMPORTS("allAdvImports", "false"),
     FORCE("force", "false");
 
     val flag: String

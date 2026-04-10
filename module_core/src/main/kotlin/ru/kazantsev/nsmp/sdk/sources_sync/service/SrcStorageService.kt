@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 import java.io.File
 import java.nio.file.Path
 
@@ -20,7 +21,7 @@ class SrcStorageService(
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object {
-        private const val SDK_DIR_PATH = ".smp_sdk"
+        private const val SDK_DIR_PATH = ".nsmp_sdk"
         private const val INFO_FILE_NAME = "src_info.json"
     }
 
@@ -37,35 +38,38 @@ class SrcStorageService(
      *
      * При необходимости фильтрует данные по кодам scripts/modules.
      */
-    fun readLocalSrcInfo(
-        scriptsFilter: Collection<String> = emptyList(),
-        modulesFilter: Collection<String> = emptyList()
-    ): SrcInfoRoot {
-        log.debug("Read local info: file={}, scriptsFilter={}, modulesFilter={}", infoFilePath, scriptsFilter.size, modulesFilter.size)
+    fun readLocalSrcInfo(req : SrcRequest): SrcInfoRoot {
+        log.debug("Read local info: file={}, scriptsFilter={}, modulesFilter={}", infoFilePath, req.scripts.size, req.modules.size)
         if (!infoFilePath.exists() || infoFilePath.readText().isBlank()) {
             log.debug("Local info file not found or empty")
             return SrcInfoRoot()
         }
 
         val srcInfo = objectMapper.readValue(infoFilePath, SrcInfoRoot::class.java)
-        if (scriptsFilter.isEmpty() && modulesFilter.isEmpty()) {
-            log.debug("Local info loaded: scripts={}, modules={}", srcInfo.scripts.size, srcInfo.modules.size)
-            return srcInfo
-        }
 
         val filtered = SrcInfoRoot(
-            scripts = srcInfo.scripts.filter { scriptsFilter.isEmpty() || it.code in scriptsFilter },
-            modules = srcInfo.modules.filter { modulesFilter.isEmpty() || it.code in modulesFilter }
+            scripts = srcInfo.scripts.filter { req.allScripts || (it.code in req.scripts) },
+            modules = srcInfo.modules.filter { req.allModules || it.code in req.modules },
+            advImports = srcInfo.advImports.filter { req.allAdvImports || it.code in req.advImports }
         )
-        log.debug("Local info filtered: scripts={}, modules={}", filtered.scripts.size, filtered.modules.size)
+        log.debug("Local info filtered: scripts={}, modules={}, advImports={}", filtered.scripts.size, filtered.modules.size, filtered.advImports.size)
         return filtered
     }
 
     /**
      * Обновляет локальный файл метаданных, объединяя старые и новые записи по коду.
      */
-    fun updateInfoFile(scripts: List<SrcInfo>, modules: List<SrcInfo>) {
-        log.debug("Update local info file started: scripts={}, modules={}", scripts.size, modules.size)
+    fun updateInfoFile(
+        scripts: List<SrcInfo>,
+        modules: List<SrcInfo>,
+        advImports: List<SrcInfo>
+    ) {
+        log.debug(
+            "Update local info file started: scripts={}, modules={}, advImports={}",
+            scripts.size,
+            modules.size,
+            advImports.size
+        )
         val sdkDir = projectPath.resolve(SDK_DIR_PATH).toFile().apply { mkdirs() }
         val currentInfoFile = sdkDir.resolve(INFO_FILE_NAME)
         if (!currentInfoFile.exists()) {
@@ -81,6 +85,7 @@ class SrcStorageService(
         val updatedRoot = objectMapper.createObjectNode().apply {
             set<ArrayNode>("scripts", mergeEntries(rootObject.get("scripts"), scripts))
             set<ArrayNode>("modules", mergeEntries(rootObject.get("modules"), modules))
+            set<ArrayNode>("advImports", mergeEntries(rootObject.get("advImports"), advImports))
         }
 
         objectMapper.writerWithDefaultPrettyPrinter().writeValue(currentInfoFile, updatedRoot)

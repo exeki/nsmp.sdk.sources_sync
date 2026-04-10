@@ -2,8 +2,9 @@
 
 Gradle-плагин для задач синхронизации исходников NSMP.
 При подключении объявляет source sets:
-- `src/main/scrips`
+- `src/main/scripts`
 - `src/main/modules`
+- `src/main/resources`
 
 ## Maven coordinates
 
@@ -14,7 +15,7 @@ ru.kazantsev.nsmp.sdk.sources_sync:gradle:1.0.0
 ## Plugin id
 
 ```text
-nsmp_sdk_sources_sync_gradle
+nsmp_sdk_sources_sync
 ```
 
 ## Подключение плагина
@@ -44,7 +45,7 @@ pluginManagement {
 
 ```kotlin
 plugins {
-    id("nsmp_sdk_sources_sync_gradle") version "1.0.0"
+    id("nsmp_sdk_sources_sync") version "1.0.0"
 }
 ```
 
@@ -95,10 +96,25 @@ nsmpSdkSourcesSync {
 
 - `--scripts` - коды модулей через запятую
 - `--modules` - коды модулей через запятую
+- `--advImports` - коды advImports через запятую
+- `--allScripts` - взять все scripts (`true|false`)
+- `--allModules` - взять все modules (`true|false`)
+- `--allAdvImports` - взять все advImports (`true|false`)
 
 #### Дополнительно для `push`:
 
-- `--force` - пропустить syncCheck при загрузке исходников на инсталляцию
+- `--force` - пропустить syncCheck при загрузке исходников на инсталляцию (`true|false`)
+
+### Boolean аргументы
+
+Boolean параметры передаются только строками:
+- `--ignoreSsl=true|false`
+- `--force=true|false`
+- `--allScripts=true|false`
+- `--allModules=true|false`
+- `--allAdvImports=true|false`
+
+Передача флагом без значения не используется.
 
 ## Примеры запуска задач
 
@@ -107,5 +123,8 @@ nsmpSdkSourcesSync {
 ```bash
 ./gradlew pull --scripts=testScript1,testScript2 --modules=testModule1
 ./gradlew syncCheck --scripts=testScript1 --modules=testModule1
-./gradlew push --scripts=testScript1 --modules=testModule1 --force
+./gradlew push --scripts=testScript1 --modules=testModule1 --force=true
+./gradlew pull --allScripts=true
+./gradlew push --allModules=true --force=true
+./gradlew syncCheck --allAdvImports=true
 ```

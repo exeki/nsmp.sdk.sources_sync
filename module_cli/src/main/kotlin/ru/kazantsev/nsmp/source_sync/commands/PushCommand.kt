@@ -17,7 +17,7 @@ class PushCommand : AbstractCommand("push", "Upload local source files to instal
 
     override fun execute() {
         println("Executing push command...")
-        val push = getService().push(scripts, modules, force)
-        println("Push scripts=${push.scripts.size}, modules=${push.modules.size}")
+        val push = getService().push(createRequest(), force)
+        println("Push scripts=${push.scripts.size}, modules=${push.modules.size}, advImports=${push.advImports.size}")
     }
 }

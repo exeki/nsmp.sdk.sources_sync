@@ -44,7 +44,7 @@ abstract class PluginFunctionalTestBase {
     }
 
     protected fun writeLocalInfoFile() {
-        writeFileFromTemplate(".nsmp_sdk/info.json", TEMPLATE_LOCAL_INFO_JSON, emptyMap())
+        writeFileFromTemplate(".nsmp_sdk/src_info.json", TEMPLATE_LOCAL_INFO_JSON, emptyMap())
     }
 
     protected fun runner(vararg arguments: String): GradleRunner {
@@ -123,6 +123,67 @@ abstract class PluginFunctionalTestBase {
 
     private fun escapeForKotlinString(value: String): String {
         return value.replace("\\", "\\\\")
+    }
+
+    protected fun assertPulledScriptExists(code: String) {
+        val scriptsRoot = testProjectDir.resolve("src/main/scripts")
+        val found = Files.walk(scriptsRoot).use { pathStream ->
+            pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy" }
+        }
+        kotlin.test.assertTrue(found, "Expected script file for code=$code in $scriptsRoot")
+    }
+
+    protected fun assertPulledModuleExists(code: String) {
+        val modulesRoot = testProjectDir.resolve("src/main/modules")
+        val found = Files.walk(modulesRoot).use { pathStream ->
+            pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy" }
+        }
+        kotlin.test.assertTrue(found, "Expected module file for code=$code in $modulesRoot")
+    }
+
+    protected fun assertPulledAdvImportExists(code: String) {
+        val resourcesRoot = testProjectDir.resolve("src/main/resources")
+        val found = Files.walk(resourcesRoot).use { pathStream ->
+            pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.xml" }
+        }
+        kotlin.test.assertTrue(found, "Expected adv import file for code=$code in $resourcesRoot")
+    }
+
+    protected fun createLocalScript(code: String) {
+        val scriptPath = testProjectDir.resolve("src/main/scripts/ru/kazantsev/demo/$code.groovy")
+        Files.createDirectories(scriptPath.parent)
+        Files.writeString(
+            scriptPath,
+            """
+            package ru.kazantsev.demo
+
+            class $code {}
+            """.trimIndent()
+        )
+    }
+
+    protected fun createLocalModule(code: String) {
+        val modulePath = testProjectDir.resolve("src/main/modules/ru/kazantsev/demo/$code.groovy")
+        Files.createDirectories(modulePath.parent)
+        Files.writeString(
+            modulePath,
+            """
+            package ru.kazantsev.demo
+
+            class $code {}
+            """.trimIndent()
+        )
+    }
+
+    protected fun createLocalAdvImport(code: String) {
+        val advImportPath = testProjectDir.resolve("src/main/resources/advImports/$code.xml")
+        Files.createDirectories(advImportPath.parent)
+        Files.writeString(
+            advImportPath,
+            """
+            <import code="$code"/>
+            """.trimIndent()
+        )
     }
 
     private fun deleteRecursively(path: Path) {

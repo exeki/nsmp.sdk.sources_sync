@@ -35,7 +35,7 @@ tasks.test {
 }
 
 dependencies {
-    api("ru.kazantsev.nsmp:basic_api_connector:1.5.3")
+    api("ru.kazantsev.nsmp:basic_api_connector:1.5.4")
     api("org.slf4j:slf4j-api:2.0.17")
     testImplementation(kotlin("test"))
 }

@@ -16,7 +16,11 @@ enum class CommandArgs(
     LOG_LEVEL("log-level", "info"),
     SCRIPTS("scripts", "testScript1,testScript2"),
     MODULES("modules", "testModule1,testModule2"),
-    FORCE("force", "true");
+    ADV_IMPORTS("advImports", "testImport1,testImport2"),
+    ALL_MODULES("allModules", "false"),
+    ALL_SCRIPTS("allScripts", "false"),
+    ALL_ADV_IMPORTS("allAdvImports", "false"),
+    FORCE("force", "false");
 
     val flag: String
         get() = "--$option"
