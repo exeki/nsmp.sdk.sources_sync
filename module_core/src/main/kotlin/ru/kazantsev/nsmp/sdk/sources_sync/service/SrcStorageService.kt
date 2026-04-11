@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 import java.io.File
 import java.nio.file.Path
 
@@ -38,7 +39,7 @@ class SrcStorageService(
      *
      * При необходимости фильтрует данные по кодам scripts/modules.
      */
-    fun readLocalSrcInfo(req : SrcRequest): SrcInfoRoot {
+    fun readLocalSrcInfo(req : SrcRequestWithExclusion): SrcInfoRoot {
         log.debug("Read local info: file={}, scriptsFilter={}, modulesFilter={}", infoFilePath, req.scripts.size, req.modules.size)
         if (!infoFilePath.exists() || infoFilePath.readText().isBlank()) {
             log.debug("Local info file not found or empty")
@@ -48,9 +49,9 @@ class SrcStorageService(
         val srcInfo = objectMapper.readValue(infoFilePath, SrcInfoRoot::class.java)
 
         val filtered = SrcInfoRoot(
-            scripts = srcInfo.scripts.filter { req.allScripts || (it.code in req.scripts) },
-            modules = srcInfo.modules.filter { req.allModules || it.code in req.modules },
-            advImports = srcInfo.advImports.filter { req.allAdvImports || it.code in req.advImports }
+            scripts = srcInfo.scripts.filter { (req.allScripts || (it.code in req.scripts)) && it.code !in req.scriptsExcluded},
+            modules = srcInfo.modules.filter { (req.allModules || it.code in req.modules) && it.code !in req.modulesExcluded },
+            advImports = srcInfo.advImports.filter { (req.allAdvImports || it.code in req.advImports) && it.code !in req.advImportsExcluded }
         )
         log.debug("Local info filtered: scripts={}, modules={}, advImports={}", filtered.scripts.size, filtered.modules.size, filtered.advImports.size)
         return filtered

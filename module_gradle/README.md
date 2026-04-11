@@ -100,20 +100,19 @@ nsmpSdkSourcesSync {
 - `--allScripts` - взять все scripts (`true|false`)
 - `--allModules` - взять все modules (`true|false`)
 - `--allAdvImports` - взять все advImports (`true|false`)
+- `--scriptsExcluded` - коды scripts для исключения
+- `--modulesExcluded` - коды modules для исключения
+- `--advImportsExcluded` - коды advImports для исключения
 
 #### Дополнительно для `push`:
 
 - `--force` - пропустить syncCheck при загрузке исходников на инсталляцию (`true|false`)
 
-### Boolean аргументы
+### Передача аргументов 
 
-Boolean параметры передаются только строками:
-- `--ignoreSsl=true|false`
-- `--force=true|false`
-- `--allScripts=true|false`
-- `--allModules=true|false`
-- `--allAdvImports=true|false`
+Для list-аргументов (`scripts`, `modules`, `advImports`, `scriptsExcluded`, `modulesExcluded`, `advImportsExcluded`) в задачу передается строка единая строка, значения поделены запятыми.
 
+Boolean параметры передаются только строками, пример: `--ignoreSsl=true|false`
 Передача флагом без значения не используется.
 
 ## Примеры запуска задач
@@ -122,6 +121,7 @@ Boolean параметры передаются только строками:
 
 ```bash
 ./gradlew pull --scripts=testScript1,testScript2 --modules=testModule1
+./gradlew pull --allScripts=true --scriptsExcluded=testScript2
 ./gradlew syncCheck --scripts=testScript1 --modules=testModule1
 ./gradlew push --scripts=testScript1 --modules=testModule1 --force=true
 ./gradlew pull --allScripts=true

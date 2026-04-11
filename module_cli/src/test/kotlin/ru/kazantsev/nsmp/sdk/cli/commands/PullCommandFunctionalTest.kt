@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.cli.commands
 
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.cli.CommandFunctionalTestBase
+import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -58,7 +59,7 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("Sources must be specified"))
+        assertTrue(result.stderr.contains("No source files found"))
     }
 
     @Test
@@ -131,5 +132,24 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
         )
         assertEquals(0, result.exitCode)
         assertPulledAdvImportExists("testImport1")
+    }
+
+    @Test
+    fun checkAllScriptsWithScriptsExcludedExecution() {
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_SCRIPTS.withValue("true"),
+            CommandArgs.SCRIPTS_EXCLUDED.withValue("testScript2"),
+            *connectorArgsByConfigFile()
+        )
+        assertEquals(0, result.exitCode)
+        assertPulledScriptExists("testScript1")
+        val excludedScript = testProjectDir.resolve("src/main/scripts")
+        val foundExcluded = Files.walk(excludedScript).use { pathStream ->
+            pathStream.anyMatch { path ->
+                Files.isRegularFile(path) && path.fileName.toString() == "testScript2.groovy"
+            }
+        }
+        assertTrue(!foundExcluded, "Expected script testScript2 to be excluded from pull")
     }
 }

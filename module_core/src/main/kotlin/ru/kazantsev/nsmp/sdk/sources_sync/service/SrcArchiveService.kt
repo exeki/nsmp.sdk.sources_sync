@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDto
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDto
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDtoRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -28,24 +29,37 @@ class SrcArchiveService(
      * Собирает zip-архив из локальных source root.
      */
     fun buildSrcArchive(
-        scripts: List<SrcFileDto>,
-        modules: List<SrcFileDto>,
-        advImports: List<SrcFileDto>,
+        root: SrcFileDtoRoot,
         scriptsSrcFolder: SrcFolder,
         modulesSrcFolder: SrcFolder,
         advImportsSrcFolder: SrcFolder,
     ): ByteArray {
-        log.debug("Build archive started: scripts={}, modules={}", scripts.size, modules.size)
+        log.debug(
+            "Build archive started: scripts={}, modules={}, advImports={}",
+            root.scripts.size,
+            root.modules.size,
+            root.advImports.size
+        )
         val outputStream = ByteArrayOutputStream()
 
         ZipOutputStream(outputStream).use { zipOutputStream ->
-            writeSourcesToArchive(zipOutputStream, scriptsSrcFolder, "$SRC_PUSH_ARCHIVE_ROOT/scripts", scripts)
-            writeSourcesToArchive(zipOutputStream, modulesSrcFolder, "$SRC_PUSH_ARCHIVE_ROOT/modules", modules)
+            writeSourcesToArchive(
+                zipOutputStream,
+                scriptsSrcFolder,
+                "$SRC_PUSH_ARCHIVE_ROOT/scripts",
+                root.scripts
+            )
+            writeSourcesToArchive(
+                zipOutputStream,
+                modulesSrcFolder,
+                "$SRC_PUSH_ARCHIVE_ROOT/modules",
+                root.modules
+            )
             writeSourcesToArchive(
                 zipOutputStream,
                 advImportsSrcFolder,
                 "$SRC_PUSH_ARCHIVE_ROOT/scripts/advimport",
-                advImports
+                root.advImports
             )
         }
 

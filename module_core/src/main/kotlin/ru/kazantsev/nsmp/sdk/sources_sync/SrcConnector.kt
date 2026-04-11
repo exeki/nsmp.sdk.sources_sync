@@ -9,6 +9,7 @@ import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.basic_api_connector.HttpException
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 
 /**
  * Коннектор к NSMP
@@ -30,7 +31,7 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
         }
     }
 
-    fun getSrc(body : SrcRequest): ByteArray {
+    fun getSrc(body : SrcRequestWithExclusion): ByteArray {
         val httpEntity = StringEntity(objectMapper.writeValueAsString(body), ContentType.APPLICATION_JSON)
         val response = this.execPost(
             httpEntity,
@@ -44,7 +45,7 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
         }
     }
 
-    fun getSrcInfo(body : SrcRequest): SrcInfoRoot {
+    fun getSrcInfo(body : SrcRequestWithExclusion): SrcInfoRoot {
         val httpEntity = StringEntity(objectMapper.writeValueAsString(body), ContentType.APPLICATION_JSON)
         val response = this.execPost(
             httpEntity,

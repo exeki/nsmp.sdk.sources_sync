@@ -135,7 +135,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
         val result = runner(taskName).buildAndFail()
 
-        assertTrue(result.output.contains("Sources must be specified"))
+        assertTrue(result.output.contains("No sources found to upload"))
     }
 
     @Test

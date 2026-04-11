@@ -3,12 +3,8 @@ package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 
 open class Extension {
-    internal var sendFilePath: String? = null
     internal var installation: Installation? = null
 
-    fun setSendFilePath(path: String) {
-        sendFilePath = path
-    }
 
     fun setInstallation(installationId: String) {
         installation = InstallationByConfigFile(installationId)

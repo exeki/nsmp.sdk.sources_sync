@@ -47,7 +47,20 @@ ru.kazantsev.nsmp.sdk.sources_sync:cli:{версия}
 - `--allScripts` - взять все локальные scripts (`true|false`)
 - `--allModules` - взять все локальные modules (`true|false`)
 - `--allAdvImports` - взять все локальные advImports (`true|false`)
-- `--force` - отключает sync check перед upload, применяется только в команде `push`
+- `--scriptsExcluded` - коды scripts для исключения
+- `--modulesExcluded` - коды modules для исключения
+- `--advImportsExcluded` - коды advImports для исключения
+
+#### Дополнительные опции для `push`
+
+- `--force` - отключает sync check перед push
+
+### Передача аргументов
+
+Для list-аргументов (`scripts`, `modules`, `advImports`, `scriptsExcluded`, `modulesExcluded`, `advImportsExcluded`) в задачу передается строка единая строка, значения поделены запятыми.
+
+Boolean параметры передаются только строками, пример: `--ignoreSsl=true|false`
+Передача флагом без значения не используется.
 
 ### Boolean аргументы
 
@@ -68,7 +81,8 @@ Boolean параметры передаются только строками:
 java -jar cli-1.0.0.jar pull \
   --installationId EXEKI1 \
   --scripts testScript1,testScript2 \
-  --modules testModule1
+  --modules testModule1 \
+  --scriptsExcluded testScript2
 ```
 
 Через `configPath`:

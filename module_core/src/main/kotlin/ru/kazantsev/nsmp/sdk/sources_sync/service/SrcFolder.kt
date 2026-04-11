@@ -52,10 +52,30 @@ class SrcFolder(
     }
 
     /**
+     * Записать новый файл исходника.
+     * @param src ДТО файла
+     */
+    fun writeSourceFile(src: SrcDto) {
+        val packageDirectory = resolvePackageDirectory(src.text)
+        val sourceFile = packageDirectory.resolve("${src.info.code}.$format")
+        sourceFile.writeText(src.text)
+        log.debug("Source file written: file={}", sourceFile)
+    }
+
+    /**
+     * Получить исходнки по параметрами
+     */
+    fun findSourceFiles(srcCodes: List<String>, all : Boolean, excluded : List<String>? = null): List<SrcFileDto> {
+        val list = if(all) getAllSourceFiles() else findSourceFiles(srcCodes)
+        return if(!excluded.isNullOrEmpty()) list.filter { !excluded.contains(it.code) }
+        else list
+    }
+
+    /**
      * Найти файлы исходников по кодам в source set (независимо от вложенности по папкам).
      * @param srcCodes список кодов исходников
      */
-    fun findSourceFiles(srcCodes: List<String>): List<SrcFileDto> {
+    private fun findSourceFiles(srcCodes: List<String>): List<SrcFileDto> {
         log.debug("Find source files started: path={}, requested={}", getPath(), srcCodes.size)
         val allFiles = getPath().walkTopDown().filter { it.isFile }.toList()
         val result = srcCodes.map { srcCode ->
@@ -76,7 +96,7 @@ class SrcFolder(
     /**
      * Получить все файлы исходников из папки.
      */
-    fun getAllSourceFiles( ): List<SrcFileDto> {
+    private fun getAllSourceFiles( ): List<SrcFileDto> {
         val rootDirectory = getPath()
         if (!exists()) return emptyList()
 
@@ -96,17 +116,6 @@ class SrcFolder(
         }
         log.debug("Collected all source files: path={}, count={}", rootDirectory, result.size)
         return result
-    }
-
-    /**
-     * Записать новый файл исходника.
-     * @param src ДТО файла
-     */
-    fun writeSourceFile(src: SrcDto) {
-        val packageDirectory = resolvePackageDirectory(src.text)
-        val sourceFile = packageDirectory.resolve("${src.info.code}.$format")
-        sourceFile.writeText(src.text)
-        log.debug("Source file written: file={}", sourceFile)
     }
 
     /**

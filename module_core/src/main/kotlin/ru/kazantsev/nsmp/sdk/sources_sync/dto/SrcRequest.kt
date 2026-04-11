@@ -1,6 +1,6 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.dto
 
-class SrcRequest(
+open class SrcRequest(
     val modules: List<String> = listOf(),
     val allModules: Boolean = false,
     val scripts: List<String> = listOf(),

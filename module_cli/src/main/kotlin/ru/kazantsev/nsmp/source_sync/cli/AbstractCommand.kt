@@ -9,6 +9,7 @@ import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 import java.nio.file.Paths
 
 @OptIn(ExperimentalCli::class)
@@ -101,6 +102,24 @@ abstract class AbstractCommand(
         description = "Use all local adv imports (true|false)"
     ).default("false")
 
+    private val modulesExcludedCsv by option(
+        ArgType.String,
+        fullName = "modulesExcluded",
+        description = "Module codes to exclude, separated by comma"
+    ).default("")
+
+    private val scriptsExcludedCsv by option(
+        ArgType.String,
+        fullName = "scriptsExcluded",
+        description = "Script codes to exclude, separated by comma"
+    ).default("")
+
+    private val advImportsExcludedCsv by option(
+        ArgType.String,
+        fullName = "advImportsExcluded",
+        description = "Advanced import codes to exclude, separated by comma"
+    ).default("")
+
     protected val ignoreSsl: Boolean
         get() = parseBooleanOption("ignoreSsl", ignoreSslRaw)
 
@@ -119,14 +138,17 @@ abstract class AbstractCommand(
         return SrcService(connector, ObjectMapper(), projectPath)
     }
 
-    protected fun createRequest(): SrcRequest {
-        return SrcRequest(
+    protected fun createRequest(): SrcRequestWithExclusion {
+        return SrcRequestWithExclusion(
             modules = parseCsv(modulesCsv),
             allModules = parseBooleanOption("allModules", allModulesRaw),
+            modulesExcluded = parseCsv(modulesExcludedCsv),
             scripts = parseCsv(scriptsCsv),
             allScripts = parseBooleanOption("allScripts", allScriptsRaw),
+            scriptsExcluded = parseCsv(scriptsExcludedCsv),
             advImports = parseCsv(advImportsCsv),
-            allAdvImports = parseBooleanOption("allAdvImports", allAdvImportsRaw)
+            allAdvImports = parseBooleanOption("allAdvImports", allAdvImportsRaw),
+            advImportsExcluded = parseCsv(advImportsExcludedCsv),
         )
     }
 

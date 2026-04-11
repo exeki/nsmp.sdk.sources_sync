@@ -11,7 +11,7 @@ import org.gradle.api.tasks.options.Option
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 import java.nio.file.Paths
 
 abstract class AbstractTask : DefaultTask() {
@@ -79,6 +79,21 @@ abstract class AbstractTask : DefaultTask() {
     @get:Option(option = "allAdvImports", description = "Use all local advanced imports")
     abstract val allAdvImports: Property<String>
 
+    @get:Input
+    @get:Optional
+    @get:Option(option = "modulesExcluded", description = "Module codes to exclude, separated by comma")
+    abstract val modulesExcluded: Property<String>
+
+    @get:Input
+    @get:Optional
+    @get:Option(option = "scriptsExcluded", description = "Script codes to exclude, separated by comma")
+    abstract val scriptsExcluded: Property<String>
+
+    @get:Input
+    @get:Optional
+    @get:Option(option = "advImportsExcluded", description = "Advanced import codes to exclude, separated by comma")
+    abstract val advImportsExcluded: Property<String>
+
     protected fun createConnectorParams(): ConnectorParams {
         return if (installationId.isPresent && configurationPath.isPresent) {
             ConnectorParams.byConfigFileInPath(installationId.get(), configurationPath.get())
@@ -125,14 +140,17 @@ abstract class AbstractTask : DefaultTask() {
         }
     }
 
-    protected fun createRequest(): SrcRequest {
-        return SrcRequest(
+    protected fun createRequest(): SrcRequestWithExclusion {
+        return SrcRequestWithExclusion(
             modules = parseCsvOption(modules.orNull),
             allModules = parseBooleanOption("allModules", allModules.orNull ?: "false"),
+            modulesExcluded = parseCsvOption(modulesExcluded.orNull),
             scripts = parseCsvOption(scripts.orNull),
             allScripts = parseBooleanOption("allScripts", allScripts.orNull ?: "false"),
+            scriptsExcluded = parseCsvOption(scriptsExcluded.orNull),
             advImports = parseCsvOption(advImports.orNull),
-            allAdvImports = parseBooleanOption("allAdvImports", allAdvImports.orNull ?: "false")
+            allAdvImports = parseBooleanOption("allAdvImports", allAdvImports.orNull ?: "false"),
+            advImportsExcluded = parseCsvOption(advImportsExcluded.orNull),
         )
     }
 

@@ -25,39 +25,17 @@ class Plugin : Plugin<Project> {
         project.tasks.register(
             PullTask.NAME,
             PullTask::class.java
-        ).configureRemote(extension, providers) {
-            scripts.convention("")
-            modules.convention("")
-            advImports.convention("")
-            allScripts.convention("false")
-            allModules.convention("false")
-            allAdvImports.convention("false")
-        }
+        ).configureRemote(extension, providers)
 
         project.tasks.register(
             SyncCheckTask.NAME,
             SyncCheckTask::class.java
-        ).configureRemote(extension, providers) {
-            scripts.convention("")
-            modules.convention("")
-            advImports.convention("")
-            allScripts.convention("false")
-            allModules.convention("false")
-            allAdvImports.convention("false")
-        }
+        ).configureRemote(extension, providers)
 
         project.tasks.register(
             PushTask.NAME,
             PushTask::class.java
-        ).configureRemote(extension, providers) {
-            scripts.convention("")
-            modules.convention("")
-            advImports.convention("")
-            allScripts.convention("false")
-            allModules.convention("false")
-            allAdvImports.convention("false")
-            force.convention("false")
-        }
+        ).configureRemote(extension, providers)
     }
 }
 

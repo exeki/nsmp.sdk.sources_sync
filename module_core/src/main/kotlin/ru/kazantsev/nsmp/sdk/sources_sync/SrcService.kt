@@ -3,10 +3,11 @@ package ru.kazantsev.nsmp.sdk.sources_sync
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDtoRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDto
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcArchiveService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcChecksumService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcFolder
@@ -45,32 +46,32 @@ class SrcService(
     /**
      * Загружает исходники с сервера и сохраняет их в локальные source sets.
      */
-    fun pull(req: SrcRequest): SrcDtoRoot {
+    fun pull(req: SrcRequestWithExclusion): SrcDtoRoot {
         log.info("Fetch started: req={}", req)
-        checkReqIsNotEmpty(req)
         val srcArchive = connector.getSrc(req)
-        val srcRoot = srcArchiveService.unpackSrcArchive(srcArchive)
-        srcRoot.scripts.forEach { scriptsSrcFolder.writeSourceFile(it) }
-        srcRoot.modules.forEach { modulesSrcFolder.writeSourceFile(it) }
-        srcRoot.advImports.forEach { advImportsSrcFolder.writeSourceFile(it) }
+        val root = srcArchiveService.unpackSrcArchive(srcArchive)
+        if (root.scripts.isEmpty() && root.advImports.isEmpty() && root.modules.isEmpty()) throw RuntimeException("No source files found")
+        root.scripts.forEach { scriptsSrcFolder.writeSourceFile(it) }
+        root.modules.forEach { modulesSrcFolder.writeSourceFile(it) }
+        root.advImports.forEach { advImportsSrcFolder.writeSourceFile(it) }
         srcStorageService.updateInfoFile(
-            srcRoot.scripts.map { it.info },
-            srcRoot.modules.map { it.info },
-            srcRoot.advImports.map { it.info }
+            root.scripts.map { it.info },
+            root.modules.map { it.info },
+            root.advImports.map { it.info }
         )
         log.info(
             "Fetch completed: scripts={}, modules={}, advImports={}",
-            srcRoot.scripts.size,
-            srcRoot.modules.size,
-            srcRoot.advImports.size
+            root.scripts.size,
+            root.modules.size,
+            root.advImports.size
         )
-        return srcRoot
+        return root
     }
 
     /**
      * Получает чексуммы с сервера и сравнивает их с локальным хранилищем.
      */
-    fun syncCheck(req: SrcRequest): SrcInfoRoot {
+    fun syncCheck(req: SrcRequestWithExclusion): SrcInfoRoot {
         log.info("Diff started: {}", req)
         checkReqIsNotEmpty(req)
         val remoteSrcInfo = getRemoteSrcInfo(req)
@@ -89,23 +90,32 @@ class SrcService(
      * Собирает локальные исходники, проверяет их чексуммами и отправляет на сервер.
      */
     fun push(
-        req: SrcRequest,
+        req: SrcRequestWithExclusion,
         force: Boolean = false
     ): SrcInfoRoot {
         log.info("Push started: req={}, force={}", req, force)
 
-        checkReqIsNotEmpty(req)
+        val requestedRoot = SrcFileDtoRoot(
+            scripts = scriptsSrcFolder.findSourceFiles(
+                req.scripts,
+                req.allScripts,
+                req.scriptsExcluded
+            ),
+            modules = modulesSrcFolder.findSourceFiles(
+                req.modules,
+                req.allModules,
+                req.modulesExcluded
+            ),
+            advImports = advImportsSrcFolder.findSourceFiles(
+                req.advImports,
+                req.allAdvImports,
+                req.advImportsExcluded
+            )
+        )
 
-        val requestedScripts: List<SrcFileDto> = if (req.allScripts) scriptsSrcFolder.getAllSourceFiles()
-        else scriptsSrcFolder.findSourceFiles(req.scripts)
-
-        val requestedModules: List<SrcFileDto> = if (req.allModules) modulesSrcFolder.getAllSourceFiles()
-        else modulesSrcFolder.findSourceFiles(req.modules)
-
-        val requestedAdvImports: List<SrcFileDto> = if (req.allAdvImports) advImportsSrcFolder.getAllSourceFiles()
-        else advImportsSrcFolder.findSourceFiles(req.advImports)
-
-        if (requestedScripts.isEmpty() && requestedModules.isEmpty() && requestedAdvImports.isEmpty()) throw IllegalStateException("No sources found to upload")
+        if (requestedRoot.scripts.isEmpty() && requestedRoot.modules.isEmpty() && requestedRoot.advImports.isEmpty()) throw IllegalStateException(
+            "No sources found to upload"
+        )
 
         if (!force) {
             val remoteSrcInfo = getRemoteSrcInfo(req)
@@ -127,9 +137,7 @@ class SrcService(
             }
         } else log.warn("force push enabled!")
         val srcArchive = srcArchiveService.buildSrcArchive(
-            requestedScripts,
-            requestedModules,
-            requestedAdvImports,
+            requestedRoot,
             scriptsSrcFolder,
             modulesSrcFolder,
             advImportsSrcFolder,
@@ -157,7 +165,7 @@ class SrcService(
     /**
      * Получает с сервера актуальную информацию о чексуммах исходников.
      */
-    private fun getRemoteSrcInfo(req: SrcRequest): SrcInfoRoot {
+    private fun getRemoteSrcInfo(req: SrcRequestWithExclusion): SrcInfoRoot {
         log.info("Remote info request started: {}", req)
         val remoteInfo = connector.getSrcInfo(req)
         log.info(
