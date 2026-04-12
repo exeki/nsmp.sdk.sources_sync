@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 import java.io.File
 import java.nio.file.Path
 
@@ -39,7 +38,7 @@ class SrcStorageService(
      *
      * При необходимости фильтрует данные по кодам scripts/modules.
      */
-    fun readLocalSrcInfo(req : SrcRequestWithExclusion): SrcInfoRoot {
+    fun readLocalSrcInfo(req : SrcRequest): SrcInfoRoot {
         log.debug("Read local info: file={}, scriptsFilter={}, modulesFilter={}", infoFilePath, req.scripts.size, req.modules.size)
         if (!infoFilePath.exists() || infoFilePath.readText().isBlank()) {
             log.debug("Local info file not found or empty")

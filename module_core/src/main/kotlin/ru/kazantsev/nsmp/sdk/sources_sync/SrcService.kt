@@ -7,7 +7,6 @@ import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcArchiveService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcChecksumService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcFolder
@@ -37,16 +36,10 @@ class SrcService(
     val modulesSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_MODULES_PATH), "groovy")
     val advImportsSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_ADV_IMPORTS_PATH), "xml")
 
-    private fun checkReqIsNotEmpty(req: SrcRequest) {
-        if (!req.allModules && !req.allScripts && !req.allAdvImports && req.modules.isEmpty() && req.scripts.isEmpty() && req.advImports.isEmpty()) {
-            throw IllegalArgumentException("Sources must be specified. Please specify modules, scripts or adv imports")
-        }
-    }
-
     /**
      * Загружает исходники с сервера и сохраняет их в локальные source sets.
      */
-    fun pull(req: SrcRequestWithExclusion): SrcDtoRoot {
+    fun pull(req: SrcRequest): SrcDtoRoot {
         log.info("Fetch started: req={}", req)
         val srcArchive = connector.getSrc(req)
         val root = srcArchiveService.unpackSrcArchive(srcArchive)
@@ -71,9 +64,8 @@ class SrcService(
     /**
      * Получает чексуммы с сервера и сравнивает их с локальным хранилищем.
      */
-    fun syncCheck(req: SrcRequestWithExclusion): SrcInfoRoot {
+    fun syncCheck(req: SrcRequest): SrcInfoRoot {
         log.info("Diff started: {}", req)
-        checkReqIsNotEmpty(req)
         val remoteSrcInfo = getRemoteSrcInfo(req)
         val localSrcInfo = srcStorageService.readLocalSrcInfo(req)
         val diff = srcChecksumService.compareSrcInfo(remoteSrcInfo, localSrcInfo)
@@ -90,7 +82,7 @@ class SrcService(
      * Собирает локальные исходники, проверяет их чексуммами и отправляет на сервер.
      */
     fun push(
-        req: SrcRequestWithExclusion,
+        req: SrcRequest,
         force: Boolean = false
     ): SrcInfoRoot {
         log.info("Push started: req={}, force={}", req, force)
@@ -165,7 +157,7 @@ class SrcService(
     /**
      * Получает с сервера актуальную информацию о чексуммах исходников.
      */
-    private fun getRemoteSrcInfo(req: SrcRequestWithExclusion): SrcInfoRoot {
+    private fun getRemoteSrcInfo(req: SrcRequest): SrcInfoRoot {
         log.info("Remote info request started: {}", req)
         val remoteInfo = connector.getSrcInfo(req)
         log.info(

@@ -11,7 +11,7 @@ import org.gradle.api.tasks.options.Option
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
+import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 import java.nio.file.Paths
 
 abstract class AbstractTask : DefaultTask() {
@@ -140,8 +140,8 @@ abstract class AbstractTask : DefaultTask() {
         }
     }
 
-    protected fun createRequest(): SrcRequestWithExclusion {
-        return SrcRequestWithExclusion(
+    protected fun createRequest(): SrcRequest {
+        return SrcRequest(
             modules = parseCsvOption(modules.orNull),
             allModules = parseBooleanOption("allModules", allModules.orNull ?: "false"),
             modulesExcluded = parseCsvOption(modulesExcluded.orNull),

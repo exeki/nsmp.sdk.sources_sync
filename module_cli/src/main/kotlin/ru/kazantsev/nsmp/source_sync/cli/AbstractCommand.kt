@@ -9,7 +9,6 @@ import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 import java.nio.file.Paths
 
 @OptIn(ExperimentalCli::class)
@@ -138,8 +137,8 @@ abstract class AbstractCommand(
         return SrcService(connector, ObjectMapper(), projectPath)
     }
 
-    protected fun createRequest(): SrcRequestWithExclusion {
-        return SrcRequestWithExclusion(
+    protected fun createRequest(): SrcRequest {
+        return SrcRequest(
             modules = parseCsv(modulesCsv),
             allModules = parseBooleanOption("allModules", allModulesRaw),
             modulesExcluded = parseCsv(modulesExcludedCsv),
