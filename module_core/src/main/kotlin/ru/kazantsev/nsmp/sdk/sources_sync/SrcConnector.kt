@@ -6,9 +6,8 @@ import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
 import ru.kazantsev.nsmp.basic_api_connector.Connector
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.basic_api_connector.HttpException
+import ru.kazantsev.nsmp.basic_api_connector.ConnectorHttpException
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequestWithExclusion
 
 /**
@@ -23,8 +22,8 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
         val status = response.code
         if (status !in 200..<400) {
             val body: String? = if (response.entity != null) EntityUtils.toString(response.entity) else null
-            throw HttpException(
-                HttpException.createErrorText(this.host, status.toString(), body),
+            throw ConnectorHttpException(
+                ConnectorHttpException.createErrorText(this.host, status.toString(), body),
                 status,
                 response
             )
