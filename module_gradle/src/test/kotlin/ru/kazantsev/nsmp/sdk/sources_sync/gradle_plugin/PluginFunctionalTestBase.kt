@@ -6,6 +6,8 @@ import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.TaskArgs
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.assertTrue
 
 abstract class PluginFunctionalTestBase {
@@ -158,7 +160,9 @@ abstract class PluginFunctionalTestBase {
             """
             package ru.kazantsev.demo
 
-            class $code {}
+            def code = "$code"
+            def pushTome = "${LocalDateTime.now()}" 
+            def a = 111
             """.trimIndent()
         )
     }

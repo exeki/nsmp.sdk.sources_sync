@@ -59,16 +59,12 @@ class SrcStorageService(
     /**
      * Обновляет локальный файл метаданных, объединяя старые и новые записи по коду.
      */
-    fun updateInfoFile(
-        scripts: List<SrcInfo>,
-        modules: List<SrcInfo>,
-        advImports: List<SrcInfo>
-    ) {
+    fun updateInfoFile(root : SrcInfoRoot) {
         log.debug(
             "Update local info file started: scripts={}, modules={}, advImports={}",
-            scripts.size,
-            modules.size,
-            advImports.size
+            root.scripts.size,
+            root.modules.size,
+            root.advImports.size
         )
         val sdkDir = projectPath.resolve(SDK_DIR_PATH).toFile().apply { mkdirs() }
         val currentInfoFile = sdkDir.resolve(INFO_FILE_NAME)
@@ -83,9 +79,9 @@ class SrcStorageService(
         }
 
         val updatedRoot = objectMapper.createObjectNode().apply {
-            set<ArrayNode>("scripts", mergeEntries(rootObject.get("scripts"), scripts))
-            set<ArrayNode>("modules", mergeEntries(rootObject.get("modules"), modules))
-            set<ArrayNode>("advImports", mergeEntries(rootObject.get("advImports"), advImports))
+            set<ArrayNode>("scripts", mergeEntries(rootObject.get("scripts"), root.scripts))
+            set<ArrayNode>("modules", mergeEntries(rootObject.get("modules"), root.modules))
+            set<ArrayNode>("advImports", mergeEntries(rootObject.get("advImports"), root.advImports))
         }
 
         objectMapper.writerWithDefaultPrettyPrinter().writeValue(currentInfoFile, updatedRoot)

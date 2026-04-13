@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcArchiveService
@@ -29,12 +28,17 @@ class SrcService(
         const val DEFAULT_ADV_IMPORTS_PATH: String = "src\\main\\resources"
     }
 
-    val srcStorageService = SrcStorageService(projectPath, objectMapper)
-    val srcArchiveService = SrcArchiveService(objectMapper)
     val srcChecksumService = SrcChecksumService()
     val scriptsSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_SCRIPTS_PATH), "groovy")
     val modulesSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_MODULES_PATH), "groovy")
     val advImportsSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_ADV_IMPORTS_PATH), "xml")
+    val srcStorageService = SrcStorageService(projectPath, objectMapper)
+    val srcArchiveService = SrcArchiveService(
+        objectMapper,
+        scriptsSrcFolder,
+        modulesSrcFolder,
+        advImportsSrcFolder
+    )
 
     /**
      * Загружает исходники с сервера и сохраняет их в локальные source sets.
@@ -47,11 +51,7 @@ class SrcService(
         root.scripts.forEach { scriptsSrcFolder.writeSourceFile(it) }
         root.modules.forEach { modulesSrcFolder.writeSourceFile(it) }
         root.advImports.forEach { advImportsSrcFolder.writeSourceFile(it) }
-        srcStorageService.updateInfoFile(
-            root.scripts.map { it.info },
-            root.modules.map { it.info },
-            root.advImports.map { it.info }
-        )
+        srcStorageService.updateInfoFile(root.toInfo())
         log.info(
             "Fetch completed: scripts={}, modules={}, advImports={}",
             root.scripts.size,
@@ -128,23 +128,9 @@ class SrcService(
                 }
             }
         } else log.warn("force push enabled!")
-        val srcArchive = srcArchiveService.buildSrcArchive(
-            requestedRoot,
-            scriptsSrcFolder,
-            modulesSrcFolder,
-            advImportsSrcFolder,
-        )
-        val pushedSourcesInfo = connector.pushScripts(srcArchive)
-        val pushedInfo = SrcInfoRoot(
-            scripts = pushedSourcesInfo.scripts.map { SrcInfo(it.checksum, it.code) }.toMutableList(),
-            modules = pushedSourcesInfo.modules.map { SrcInfo(it.checksum, it.code) }.toMutableList(),
-            advImports = pushedSourcesInfo.advimports.map { SrcInfo(it.checksum, it.code) }.toMutableList(),
-        )
-        srcStorageService.updateInfoFile(
-            pushedInfo.scripts,
-            pushedInfo.modules,
-            pushedInfo.advImports
-        )
+        val scriptsChecksums = connector.pushScripts(srcArchiveService.buildSrcArchive(requestedRoot))
+        val pushedInfo = SrcInfoRoot.fromChecksums(scriptsChecksums)
+        srcStorageService.updateInfoFile(pushedInfo)
         log.info(
             "Push completed: scripts={}, modules={}, advImports={}",
             pushedInfo.scripts.size,

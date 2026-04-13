@@ -17,7 +17,10 @@ import java.util.zip.ZipOutputStream
  * Сервис для работы с архивом `src`: упаковка, распаковка и преобразование checksum-ответа.
  */
 class SrcArchiveService(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val scriptsSrcFolder: SrcFolder,
+    private val modulesSrcFolder: SrcFolder,
+    private val advImportsSrcFolder: SrcFolder,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -30,10 +33,8 @@ class SrcArchiveService(
      */
     fun buildSrcArchive(
         root: SrcFileDtoRoot,
-        scriptsSrcFolder: SrcFolder,
-        modulesSrcFolder: SrcFolder,
-        advImportsSrcFolder: SrcFolder,
-    ): ByteArray {
+
+        ): ByteArray {
         log.debug(
             "Build archive started: scripts={}, modules={}, advImports={}",
             root.scripts.size,
@@ -154,7 +155,7 @@ class SrcArchiveService(
     ) {
         sources.forEach { source ->
             //val relativePath = srcFolder.getPath().toPath().relativize(source.file.toPath()).toString().replace(File.separatorChar, '/')
-            val entryName = "$archiveRoot/${source.code}/${srcFolder.format}"
+            val entryName = "$archiveRoot/${source.code}.${srcFolder.format}"
 
             zipOutputStream.putNextEntry(ZipEntry(entryName))
             source.file.inputStream().use { inputStream ->
