@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    kotlin("plugin.serialization")
     id("java-library")
     id("maven-publish")
 }
@@ -35,7 +36,8 @@ tasks.test {
 }
 
 dependencies {
-    api("ru.kazantsev.nsmp:basic_api_connector:1.6.0")
-    api("org.slf4j:slf4j-api:2.0.17")
+    api("ru.kazantsev.nsmp:basic_api_connector:1.7.1")
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     testImplementation(kotlin("test"))
 }

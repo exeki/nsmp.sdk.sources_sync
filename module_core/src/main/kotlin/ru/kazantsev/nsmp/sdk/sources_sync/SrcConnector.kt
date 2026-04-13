@@ -1,12 +1,13 @@
 package ru.kazantsev.nsmp.sdk.sources_sync
 
+import kotlinx.serialization.json.Json
 import org.apache.hc.core5.http.ClassicHttpResponse
 import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
 import ru.kazantsev.nsmp.basic_api_connector.Connector
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.basic_api_connector.ConnectorHttpException
+import ru.kazantsev.nsmp.basic_api_connector.exception.BadResponseException
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 
@@ -17,13 +18,16 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
 
     private val moduleBase: String = "modules.sdkController."
     private val paramsConst: String = "request,response,user"
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
 
     private fun checkStatus(response: ClassicHttpResponse) {
         val status = response.code
         if (status !in 200..<400) {
             val body: String? = if (response.entity != null) EntityUtils.toString(response.entity) else null
-            throw ConnectorHttpException(
-                ConnectorHttpException.createErrorText(this.host, status.toString(), body),
+            throw BadResponseException(
+                BadResponseException.createErrorText(this.host, status.toString(), body),
                 status,
                 response
             )
@@ -31,7 +35,7 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
     }
 
     fun getSrc(body : SrcRequest): ByteArray {
-        val httpEntity = StringEntity(objectMapper.writeValueAsString(body), ContentType.APPLICATION_JSON)
+        val httpEntity = StringEntity(json.encodeToString(body), ContentType.APPLICATION_JSON)
         val response = this.execPost(
             httpEntity,
             moduleBase + "getSrc",
@@ -45,7 +49,7 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
     }
 
     fun getSrcInfo(body : SrcRequest): SrcInfoRoot {
-        val httpEntity = StringEntity(objectMapper.writeValueAsString(body), ContentType.APPLICATION_JSON)
+        val httpEntity = StringEntity(json.encodeToString(body), ContentType.APPLICATION_JSON)
         val response = this.execPost(
             httpEntity,
             moduleBase + "getSrcInfo",
@@ -54,6 +58,6 @@ class SrcConnector(params: ConnectorParams) : Connector(params) {
         )
         checkStatus(response)
         val bodyText = EntityUtils.toString(response.entity, Charsets.UTF_8)
-        return objectMapper.readValue(bodyText, SrcInfoRoot::class.java)
+        return json.decodeFromString(bodyText)
     }
 }

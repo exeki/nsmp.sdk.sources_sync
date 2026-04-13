@@ -1,9 +1,10 @@
 plugins {
     kotlin("jvm") version "2.3.0" apply false
+    kotlin("plugin.serialization") version "2.3.0" apply false
 }
 
 group = "ru.kazantsev.nsmp.sdk.sources_sync"
-version = "1.2.3"
+version = "1.2.4"
 
 subprojects {
 

@@ -1,6 +1,7 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDto
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDto
@@ -17,12 +18,14 @@ import java.util.zip.ZipOutputStream
  * Сервис для работы с архивом `src`: упаковка, распаковка и преобразование checksum-ответа.
  */
 class SrcArchiveService(
-    private val objectMapper: ObjectMapper,
     private val scriptsSrcFolder: SrcFolder,
     private val modulesSrcFolder: SrcFolder,
     private val advImportsSrcFolder: SrcFolder,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
 
     companion object {
         private const val SRC_PUSH_ARCHIVE_ROOT = "src/main/groovy/ru/naumen"
@@ -106,10 +109,7 @@ class SrcArchiveService(
                     }
 
                     normalizedEntryName == "info.json" -> {
-                        info = objectMapper.readValue(
-                            String(zis.readBytes(), Charsets.UTF_8),
-                            SrcInfoRoot::class.java
-                        )
+                        info = json.decodeFromString(String(zis.readBytes(), Charsets.UTF_8))
                     }
                 }
                 entry = zis.nextEntry

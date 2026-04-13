@@ -20,7 +20,7 @@ gradlePlugin {
 }
 
 dependencies {
-    runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
+    // runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
     implementation(project(":core"))
     testImplementation(gradleTestKit())
     testImplementation(kotlin("test"))

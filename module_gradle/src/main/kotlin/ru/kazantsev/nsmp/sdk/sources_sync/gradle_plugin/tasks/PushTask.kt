@@ -23,9 +23,29 @@ abstract class PushTask : AbstractTask() {
 
     @TaskAction
     fun action() {
-        createService().push(
+        logger.lifecycle("Running Push task")
+        val res = createService().push(
             createRequest(),
             parseBooleanOption("force", force.orNull ?: "false")
         )
+        logger.lifecycle("Pushed ${res.scripts.size} scripts, ${res.modules.size} modules, ${res.advImports.size} advImports")
+        if(res.scripts.isNotEmpty()) {
+            logger.info("scripts:")
+            res.scripts.forEach {
+                logger.info(it.code)
+            }
+        }
+        if(res.modules.isNotEmpty()) {
+            logger.info("modules:")
+            res.modules.forEach {
+                logger.info(it.code)
+            }
+        }
+        if(res.advImports.isNotEmpty()) {
+            logger.info("advImports:")
+            res.advImports.forEach {
+                logger.info(it.code)
+            }
+        }
     }
 }

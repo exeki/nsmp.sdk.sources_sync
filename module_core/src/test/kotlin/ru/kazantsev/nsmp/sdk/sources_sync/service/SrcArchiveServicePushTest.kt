@@ -1,10 +1,8 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -34,13 +32,10 @@ class SrcArchiveServicePushTest {
         val modulesFolder = SrcFolder(projectDir.resolve("src/main/modules"), "groovy")
         val advImportsFolder = SrcFolder(projectDir.resolve("src/main/resources"), "xml")
         val archiveService = SrcArchiveService(
-            objectMapper = ObjectMapper(),
             scriptsSrcFolder = scriptsFolder,
             modulesSrcFolder = modulesFolder,
             advImportsSrcFolder = advImportsFolder
         )
-        val srcStorageService = SrcStorageService(projectDir, ObjectMapper())
-
         val scriptText = """
             package ru.kazantsev.demo
 

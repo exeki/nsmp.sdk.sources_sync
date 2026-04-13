@@ -54,8 +54,7 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
     @Test
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
-        assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("Sources must be specified"))
+        assertEquals(0, result.exitCode)
     }
 
     @Test

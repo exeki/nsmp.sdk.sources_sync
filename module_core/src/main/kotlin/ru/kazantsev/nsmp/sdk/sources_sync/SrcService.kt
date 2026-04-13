@@ -34,7 +34,6 @@ class SrcService(
     val advImportsSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_ADV_IMPORTS_PATH), "xml")
     val srcStorageService = SrcStorageService(projectPath, objectMapper)
     val srcArchiveService = SrcArchiveService(
-        objectMapper,
         scriptsSrcFolder,
         modulesSrcFolder,
         advImportsSrcFolder

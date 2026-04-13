@@ -1,7 +1,9 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.dto
 
+import kotlinx.serialization.Serializable
 import ru.kazantsev.nsmp.basic_api_connector.dto.nsmp.ScriptChecksums
 
+@Serializable
 class SrcInfoRoot(
     val modules: List<SrcInfo> = emptyList(),
     val scripts: List<SrcInfo> = emptyList(),

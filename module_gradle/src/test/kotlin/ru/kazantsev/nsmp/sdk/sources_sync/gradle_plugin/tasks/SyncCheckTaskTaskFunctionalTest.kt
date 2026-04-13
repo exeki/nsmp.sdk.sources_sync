@@ -126,9 +126,9 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     override fun checkEmptyExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
 
-        val result = runner(taskName).buildAndFail()
+        val result = runner(taskName).build()
 
-        assertTrue(result.output.contains("Sources must be specified"))
+        assertTrue(result.output.contains("No src checksum differences found"))
     }
 
     @Test

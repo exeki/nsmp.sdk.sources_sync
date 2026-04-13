@@ -1,5 +1,8 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.dto
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 class SrcRequest(
     val modules: List<String> = listOf(),
     val allModules: Boolean = false,
