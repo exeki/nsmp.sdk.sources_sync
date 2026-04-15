@@ -36,7 +36,7 @@ tasks.test {
 }
 
 dependencies {
-    api("ru.kazantsev.nsmp:basic_api_connector:1.7.3")
+    api("ru.kazantsev.nsmp:basic_api_connector:1.7.4")
     implementation("org.slf4j:slf4j-api:2.0.17")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     testImplementation(kotlin("test"))
