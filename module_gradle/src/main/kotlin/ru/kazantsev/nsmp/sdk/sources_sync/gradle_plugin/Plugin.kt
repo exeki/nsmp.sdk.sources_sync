@@ -10,8 +10,9 @@ import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.SyncCheckTask
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.PullTask
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.AbstractTask
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.PushTask
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
 
+@SuppressWarnings("unused")
 class Plugin : Plugin<Project> {
 
     override fun apply(project: Project) {
@@ -42,9 +43,9 @@ class Plugin : Plugin<Project> {
 private fun configureSourceSets(project: Project) {
     val sourceSetContainer = project.extensions.getByType(SourceSetContainer::class.java)
     val main = sourceSetContainer.maybeCreate(SourceSet.MAIN_SOURCE_SET_NAME)
-    main.java.srcDir(SrcService.DEFAULT_MODULES_PATH)
-    main.java.srcDir(SrcService.DEFAULT_SCRIPTS_PATH)
-    main.resources.srcDir(SrcService.DEFAULT_ADV_IMPORTS_PATH)
+    main.java.srcDir(SrcSyncService.getDefaultModulesPath())
+    main.java.srcDir(SrcSyncService.getDefaultScriptsPath())
+    main.resources.srcDir(SrcSyncService.getDefaultAdvImportsPath())
 }
 
 private fun <T : AbstractTask> TaskProvider<T>.configureRemote(

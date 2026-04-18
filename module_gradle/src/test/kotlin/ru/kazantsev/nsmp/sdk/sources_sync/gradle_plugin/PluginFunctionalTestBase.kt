@@ -2,11 +2,11 @@ package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin
 
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeEach
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.TaskArgs
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.test.assertTrue
 
@@ -129,7 +129,7 @@ abstract class PluginFunctionalTestBase {
     }
 
     protected fun assertPulledScriptExists(code: String) {
-        val scriptsRoot = testProjectDir.resolve("src/main/scripts")
+        val scriptsRoot = testProjectDir.resolve(SrcSyncService.getDefaultScriptsPath())
         val found = Files.walk(scriptsRoot).use { pathStream ->
             pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy" }
         }
@@ -137,7 +137,7 @@ abstract class PluginFunctionalTestBase {
     }
 
     protected fun assertPulledModuleExists(code: String) {
-        val modulesRoot = testProjectDir.resolve("src/main/modules")
+        val modulesRoot = testProjectDir.resolve(SrcSyncService.getDefaultModulesPath())
         val found = Files.walk(modulesRoot).use { pathStream ->
             pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy" }
         }
@@ -145,7 +145,7 @@ abstract class PluginFunctionalTestBase {
     }
 
     protected fun assertPulledAdvImportExists(code: String) {
-        val resourcesRoot = testProjectDir.resolve("src/main/resources")
+        val resourcesRoot = testProjectDir.resolve(SrcSyncService.getDefaultAdvImportsPath())
         val found = Files.walk(resourcesRoot).use { pathStream ->
             pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.xml" }
         }
@@ -153,7 +153,7 @@ abstract class PluginFunctionalTestBase {
     }
 
     protected fun createLocalScript(code: String) {
-        val scriptPath = testProjectDir.resolve("src/main/scripts/ru/kazantsev/demo/$code.groovy")
+        val scriptPath = testProjectDir.resolve(SrcSyncService.getDefaultScriptsPath()).resolve("ru/kazantsev/demo/$code.groovy")
         Files.createDirectories(scriptPath.parent)
         Files.writeString(
             scriptPath,
@@ -168,7 +168,7 @@ abstract class PluginFunctionalTestBase {
     }
 
     protected fun createLocalModule(code: String) {
-        val modulePath = testProjectDir.resolve("src/main/modules/ru/kazantsev/demo/$code.groovy")
+        val modulePath = testProjectDir.resolve(SrcSyncService.getDefaultModulesPath()).resolve("ru/kazantsev/demo/$code.groovy")
         Files.createDirectories(modulePath.parent)
         Files.writeString(
             modulePath,
@@ -181,7 +181,7 @@ abstract class PluginFunctionalTestBase {
     }
 
     protected fun createLocalAdvImport(code: String) {
-        val advImportPath = testProjectDir.resolve("src/main/resources/advImports/$code.xml")
+        val advImportPath = testProjectDir.resolve(SrcSyncService.getDefaultAdvImportsPath()).resolve("$code.xml")
         Files.createDirectories(advImportPath.parent)
         Files.writeString(
             advImportPath,

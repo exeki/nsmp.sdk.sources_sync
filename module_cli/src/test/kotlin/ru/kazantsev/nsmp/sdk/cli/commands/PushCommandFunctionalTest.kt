@@ -141,6 +141,6 @@ class PushCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
             CommandArgs.FORCE.withValue("true"),
             *connectorArgsByConfigFile()
         )
-        assertEquals(0, result.exitCode)
+        assertEquals(1, result.exitCode)
     }
 }

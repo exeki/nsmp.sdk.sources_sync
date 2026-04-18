@@ -6,8 +6,8 @@ import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
 import kotlinx.cli.default
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncConnector
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 import java.nio.file.Paths
 
@@ -131,10 +131,10 @@ abstract class AbstractCommand(
         else throw IllegalStateException("SMP installation identifier is not configured")
     }
 
-    protected fun getService(): SrcService {
-        val connector = SrcConnector(createConnectorParams())
+    protected fun getService(): SrcSyncService {
+        val connector = SrcSyncConnector(createConnectorParams())
         val projectPath = Paths.get(projectPath)
-        return SrcService(connector, ObjectMapper(), projectPath)
+        return SrcSyncService(connector, ObjectMapper(), projectPath)
     }
 
     protected fun createRequest(): SrcRequest {

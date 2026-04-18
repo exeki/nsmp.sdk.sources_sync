@@ -14,7 +14,7 @@ import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 /**
  * Коннектор к NSMP
  */
-class SrcConnector(params: ConnectorParams) : Connector(params) {
+class SrcSyncConnector(params: ConnectorParams) : Connector(params) {
 
     private val moduleBase: String = "modules.sdkController."
     private val paramsConst: String = "request,response,user"

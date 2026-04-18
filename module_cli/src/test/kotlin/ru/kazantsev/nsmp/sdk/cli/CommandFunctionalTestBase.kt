@@ -3,6 +3,7 @@ package ru.kazantsev.nsmp.sdk.cli
 import org.junit.jupiter.api.BeforeEach
 import ru.kazantsev.nsmp.sdk.cli.commands.CommandArgs
 import ru.kazantsev.nsmp.sdk.runCli
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
@@ -98,7 +99,7 @@ abstract class CommandFunctionalTestBase {
     }
 
     protected fun assertPulledAdvImportExists(code: String) {
-        val advImportsRoot = testProjectDir.resolve("src/main/resources")
+        val advImportsRoot = testProjectDir.resolve(SrcSyncService.getDefaultAdvImportsPath())
         val found = Files.walk(advImportsRoot).use { pathStream ->
             pathStream.anyMatch { path ->
                 Files.isRegularFile(path) && path.fileName.toString() == "$code.xml"

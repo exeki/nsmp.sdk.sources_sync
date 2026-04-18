@@ -9,8 +9,8 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.options.Option
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcConnector
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcService
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncConnector
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
 import java.nio.file.Paths
 
@@ -112,10 +112,10 @@ abstract class AbstractTask : DefaultTask() {
         }
     }
 
-    protected fun createService(): SrcService {
-        val connector = SrcConnector(resolveConnectorParams())
+    protected fun createService(): SrcSyncService {
+        val connector = SrcSyncConnector(resolveConnectorParams())
         val projectPath = Paths.get(project.projectDir.path)
-        return SrcService(connector, ObjectMapper(), projectPath)
+        return SrcSyncService(connector, ObjectMapper(), projectPath)
     }
 
     protected fun resolveConnectorParams(): ConnectorParams {

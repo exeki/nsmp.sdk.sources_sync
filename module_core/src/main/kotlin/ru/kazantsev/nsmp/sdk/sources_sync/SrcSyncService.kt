@@ -17,17 +17,21 @@ import java.nio.file.Path
 /**
  * Сервис, который оркестрирует работу с исходниками NSD.
  */
-class SrcService(
-    private val connector: SrcConnector,
+class SrcSyncService(
+    private val connector: SrcSyncConnector,
     private val objectMapper: ObjectMapper,
     private val projectPath: Path
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     companion object {
-        const val DEFAULT_SCRIPTS_PATH: String = "src\\main\\scripts"
-        const val DEFAULT_MODULES_PATH: String = "src\\main\\modules"
-        const val DEFAULT_ADV_IMPORTS_PATH: String = "src\\main\\resources"
+        private const val DEFAULT_SCRIPTS_PATH: String = "src\\main\\scripts"
+        private const val DEFAULT_MODULES_PATH: String = "src\\main\\modules"
+        private const val DEFAULT_ADV_IMPORTS_PATH: String = "src\\main\\advimports"
+
+        fun getDefaultScriptsPath() = DEFAULT_SCRIPTS_PATH
+        fun getDefaultModulesPath() = DEFAULT_MODULES_PATH
+        fun getDefaultAdvImportsPath() = DEFAULT_ADV_IMPORTS_PATH
     }
 
     val srcChecksumService = SrcChecksumService()
