@@ -4,4 +4,8 @@ class SrcFileDtoRoot(
     val scripts: List<SrcFileDto> = emptyList(),
     val modules: List<SrcFileDto> = emptyList(),
     val advImports: List<SrcFileDto> = emptyList()
-)
+) {
+    fun isEmpty(): Boolean {
+        return (modules.isEmpty() && scripts.isEmpty() && advImports.isEmpty())
+    }
+}

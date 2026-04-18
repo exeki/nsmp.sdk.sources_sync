@@ -5,6 +5,11 @@ class SrcDtoRoot(
     val modules: List<SrcDto> = emptyList(),
     val advImports: List<SrcDto> = emptyList()
 ) {
+    
+    fun isEmpty() : Boolean {
+        return (modules.isEmpty() && scripts.isEmpty() && advImports.isEmpty())
+    }
+
     fun toInfo(): SrcInfoRoot {
         return SrcInfoRoot(
             modules = this.scripts.map { it.info },

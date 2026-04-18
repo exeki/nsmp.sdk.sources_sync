@@ -9,6 +9,11 @@ class SrcInfoRoot(
     val scripts: List<SrcInfo> = emptyList(),
     val advImports: List<SrcInfo> = emptyList()
 ) {
+
+    fun isEmpty() : Boolean {
+        return (modules.isEmpty() && scripts.isEmpty() && advImports.isEmpty())
+    }
+
     companion object {
         fun fromChecksums(checksums: ScriptChecksums): SrcInfoRoot {
             return SrcInfoRoot(

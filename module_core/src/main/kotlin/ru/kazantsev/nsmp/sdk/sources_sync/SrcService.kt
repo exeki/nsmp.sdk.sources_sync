@@ -6,6 +6,8 @@ import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.NoSrcException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.SyncCheckFailedException
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcArchiveService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcChecksumService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcFolder
@@ -33,11 +35,7 @@ class SrcService(
     val modulesSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_MODULES_PATH), "groovy")
     val advImportsSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_ADV_IMPORTS_PATH), "xml")
     val srcStorageService = SrcStorageService(projectPath, objectMapper)
-    val srcArchiveService = SrcArchiveService(
-        scriptsSrcFolder,
-        modulesSrcFolder,
-        advImportsSrcFolder
-    )
+    val srcArchiveService = SrcArchiveService(scriptsSrcFolder, modulesSrcFolder, advImportsSrcFolder)
 
     /**
      * Загружает исходники с сервера и сохраняет их в локальные source sets.
@@ -46,7 +44,7 @@ class SrcService(
         log.info("Fetch started: req={}", req)
         val srcArchive = connector.getSrc(req)
         val root = srcArchiveService.unpackSrcArchive(srcArchive)
-        if (root.scripts.isEmpty() && root.advImports.isEmpty() && root.modules.isEmpty()) throw RuntimeException("No source files found")
+        if (root.isEmpty()) throw NoSrcException("No remote source files found")
         root.scripts.forEach { scriptsSrcFolder.writeSourceFile(it) }
         root.modules.forEach { modulesSrcFolder.writeSourceFile(it) }
         root.advImports.forEach { advImportsSrcFolder.writeSourceFile(it) }
@@ -104,27 +102,24 @@ class SrcService(
             )
         )
 
-        if (requestedRoot.scripts.isEmpty() && requestedRoot.modules.isEmpty() && requestedRoot.advImports.isEmpty()) throw IllegalStateException(
-            "No sources found to upload"
-        )
+        if (requestedRoot.isEmpty()) throw NoSrcException("No local sources found to push")
 
         if (!force) {
             val remoteSrcInfo = getRemoteSrcInfo(req)
             val localSrcInfo = srcStorageService.readLocalSrcInfo(req)
-            if (localSrcInfo.scripts.isNotEmpty() || localSrcInfo.modules.isNotEmpty() || localSrcInfo.advImports.isNotEmpty()) {
+            if (!localSrcInfo.isEmpty()) {
                 val diff = srcChecksumService.compareSrcInfo(remoteSrcInfo, localSrcInfo)
-                if (diff.scripts.isNotEmpty() || diff.modules.isNotEmpty() || diff.advImports.isNotEmpty()) {
-                    throw IllegalStateException(
-                        buildString {
-                            append("Src check failed. Changed scripts=")
-                            append(diff.scripts.map { it.code })
-                            append(", changed modules=")
-                            append(diff.modules.map { it.code })
-                            append(", changed adv imports=")
-                            append(diff.advImports.map { it.code })
-                        }
-                    )
-                }
+                if (!diff.scripts.isEmpty()) throw SyncCheckFailedException(
+                    buildString {
+                        append("Src check failed. Changed scripts=")
+                        append(diff.scripts.map { it.code })
+                        append(", changed modules=")
+                        append(diff.modules.map { it.code })
+                        append(", changed adv imports=")
+                        append(diff.advImports.map { it.code })
+                    },
+                    diff
+                )
             }
         } else log.warn("force push enabled!")
         val scriptsChecksums = connector.pushScripts(srcArchiveService.buildSrcArchive(requestedRoot))
