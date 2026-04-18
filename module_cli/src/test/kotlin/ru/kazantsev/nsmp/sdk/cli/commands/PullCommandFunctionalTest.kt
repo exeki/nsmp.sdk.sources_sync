@@ -59,7 +59,7 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("No source files found"))
+        assertTrue(result.stderr.contains("No remote source files found"))
     }
 
     @Test

@@ -126,7 +126,7 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
         val result = runner(taskName).buildAndFail()
 
-        assertTrue(result.output.contains("No source files found"))
+        assertTrue(result.output.contains("No remote source files found"))
     }
 
     @Test

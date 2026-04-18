@@ -61,7 +61,7 @@ class PushCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("No sources found to upload"))
+        assertTrue(result.stderr.contains("No local sources found to push"))
     }
 
     @Test
