@@ -54,7 +54,7 @@ class SrcFolder(
      * Найти файлы исходников по кодам в source set (независимо от вложенности по папкам).
      * @param srcCodes список кодов исходников
      */
-    private fun findSourceFiles(srcCodes: List<String>): List<SrcFileDto> {
+    fun findSourceFiles(srcCodes: List<String>): List<SrcFileDto> {
         log.debug("Find source files started: path={}, requested={}", absolutePath, srcCodes.size)
         val allFiles = absolutePath.toFile().walkTopDown().filter { it.isFile }.toList()
         val result = srcCodes.map { srcCode ->
@@ -75,7 +75,7 @@ class SrcFolder(
     /**
      * Получить все файлы исходников из папки.
      */
-    private fun getAllSourceFiles(): List<SrcFileDto> {
+    fun getAllSourceFiles(): List<SrcFileDto> {
         val rootDirectory = absolutePath.toFile()
         if (!file.exists()) return emptyList()
 
