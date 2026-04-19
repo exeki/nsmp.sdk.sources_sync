@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.sources_sync
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
+import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
@@ -12,32 +13,26 @@ import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcArchiveService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcChecksumService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcFolder
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcStorageService
+import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcSyncConnector
 import java.nio.file.Path
 
 /**
  * Сервис, который оркестрирует работу с исходниками NSD.
  */
 class SrcSyncService(
-    private val connector: SrcSyncConnector,
-    private val objectMapper: ObjectMapper,
-    private val projectPath: Path
+    connectorParams: ConnectorParams,
+    objectMapper: ObjectMapper,
+    srcFoldersParams: SrcFoldersParams
 ) {
+
+    private val connector = SrcSyncConnector(connectorParams)
     private val log = LoggerFactory.getLogger(javaClass)
 
-    companion object {
-        private const val DEFAULT_SCRIPTS_PATH: String = "src\\main\\scripts"
-        private const val DEFAULT_MODULES_PATH: String = "src\\main\\modules"
-        private const val DEFAULT_ADV_IMPORTS_PATH: String = "src\\main\\advimports"
-
-        fun getDefaultScriptsPath() = DEFAULT_SCRIPTS_PATH
-        fun getDefaultModulesPath() = DEFAULT_MODULES_PATH
-        fun getDefaultAdvImportsPath() = DEFAULT_ADV_IMPORTS_PATH
-    }
-
+    val projectPath: Path = Path.of(srcFoldersParams.getProjectAbsolutePathString())
     val srcChecksumService = SrcChecksumService()
-    val scriptsSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_SCRIPTS_PATH), "groovy")
-    val modulesSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_MODULES_PATH), "groovy")
-    val advImportsSrcFolder = SrcFolder(projectPath.resolve(DEFAULT_ADV_IMPORTS_PATH), "xml")
+    val scriptsSrcFolder = SrcFolder(projectPath, srcFoldersParams.getScriptsRelativePathString(), "groovy")
+    val modulesSrcFolder = SrcFolder(projectPath, srcFoldersParams.getModulesRelativePathString(), "groovy")
+    val advImportsSrcFolder = SrcFolder(projectPath, srcFoldersParams.getAdvImportsRelativePathString(), "xml")
     val srcStorageService = SrcStorageService(projectPath, objectMapper)
     val srcArchiveService = SrcArchiveService(scriptsSrcFolder, modulesSrcFolder, advImportsSrcFolder)
 

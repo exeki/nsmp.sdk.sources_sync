@@ -28,9 +28,9 @@ class SrcArchiveServicePushTest {
 
     @Test
     fun pushTest() {
-        val scriptsFolder = SrcFolder(projectDir.resolve("src/main/scripts"), "groovy")
-        val modulesFolder = SrcFolder(projectDir.resolve("src/main/modules"), "groovy")
-        val advImportsFolder = SrcFolder(projectDir.resolve("src/main/resources"), "xml")
+        val scriptsFolder = SrcFolder(projectDir, "src/main/scripts", "groovy")
+        val modulesFolder = SrcFolder(projectDir, "src/main/modules", "groovy")
+        val advImportsFolder = SrcFolder(projectDir, "src/main/resources", "xml")
         val archiveService = SrcArchiveService(
             scriptsSrcFolder = scriptsFolder,
             modulesSrcFolder = modulesFolder,

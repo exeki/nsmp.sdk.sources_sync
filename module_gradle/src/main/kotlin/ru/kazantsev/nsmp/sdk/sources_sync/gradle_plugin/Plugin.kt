@@ -6,13 +6,13 @@ import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskProvider
-import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.SyncCheckTask
-import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.PullTask
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.AbstractTask
+import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.PullTask
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.PushTask
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
+import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.SyncCheckTask
 
-@SuppressWarnings("unused")
+@Suppress("unused")
 class Plugin : Plugin<Project> {
 
     override fun apply(project: Project) {
@@ -21,7 +21,7 @@ class Plugin : Plugin<Project> {
         val extension = project.extensions.create("nsmpSdkSourcesSync", Extension::class.java)
         val providers = project.providers
 
-        configureSourceSets(project)
+        configureSourceSets(project, extension)
 
         project.tasks.register(
             PullTask.NAME,
@@ -40,12 +40,13 @@ class Plugin : Plugin<Project> {
     }
 }
 
-private fun configureSourceSets(project: Project) {
+private fun configureSourceSets(project: Project, extension: Extension) {
     val sourceSetContainer = project.extensions.getByType(SourceSetContainer::class.java)
     val main = sourceSetContainer.maybeCreate(SourceSet.MAIN_SOURCE_SET_NAME)
-    main.java.srcDir(SrcSyncService.getDefaultModulesPath())
-    main.java.srcDir(SrcSyncService.getDefaultScriptsPath())
-    main.resources.srcDir(SrcSyncService.getDefaultAdvImportsPath())
+    val srcFoldersParams = extension.srcFoldersParams ?: SrcFoldersParams(project.projectDir.path)
+    main.java.srcDir(srcFoldersParams.getModulesRelativePathString())
+    main.java.srcDir(srcFoldersParams.getScriptsRelativePathString())
+    main.resources.srcDir(srcFoldersParams.getAdvImportsRelativePathString())
 }
 
 private fun <T : AbstractTask> TaskProvider<T>.configureRemote(
@@ -56,6 +57,7 @@ private fun <T : AbstractTask> TaskProvider<T>.configureRemote(
     configure {
         it.doNotTrackState("This task must always run")
         it.connectorParamsProvider = providers.provider { extension.installation?.connectorParams }
+        it.srcFoldersParamsProvider = providers.provider { extension.srcFoldersParams }
         it.additional()
     }
     return this

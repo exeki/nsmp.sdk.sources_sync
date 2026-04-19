@@ -9,15 +9,17 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.options.Option
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncConnector
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
-import java.nio.file.Paths
 
 abstract class AbstractTask : DefaultTask() {
 
     @get:Internal
     var connectorParamsProvider: Provider<ConnectorParams>? = null
+
+    @get:Internal
+    var srcFoldersParamsProvider: Provider<SrcFoldersParams>? = null
 
     @get:Input
     @get:Optional
@@ -113,9 +115,15 @@ abstract class AbstractTask : DefaultTask() {
     }
 
     protected fun createService(): SrcSyncService {
-        val connector = SrcSyncConnector(resolveConnectorParams())
-        val projectPath = Paths.get(project.projectDir.path)
-        return SrcSyncService(connector, ObjectMapper(), projectPath)
+        return SrcSyncService(
+            resolveConnectorParams(),
+            ObjectMapper(),
+            resolveSrcFoldersParams()
+        )
+    }
+
+    protected fun resolveSrcFoldersParams(): SrcFoldersParams {
+        return srcFoldersParamsProvider?.orNull ?: SrcFoldersParams(project.projectDir.path)
     }
 
     protected fun resolveConnectorParams(): ConnectorParams {
@@ -123,6 +131,7 @@ abstract class AbstractTask : DefaultTask() {
         else connectorParamsProvider?.orNull
             ?: throw IllegalStateException("SMP connection parameters are not configured")
     }
+
 
     protected fun parseCsvOption(value: String?): List<String> {
         return value

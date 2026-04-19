@@ -6,16 +6,41 @@ import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
 import kotlinx.cli.default
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncConnector
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
 import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
-import java.nio.file.Paths
 
 @OptIn(ExperimentalCli::class)
 abstract class AbstractCommand(
     name: String,
     description: String
 ) : Subcommand(name, description) {
+
+    companion object {
+        private const val SIMPLE_LOGGER_DEFAULT_LEVEL_PROPERTY = "org.slf4j.simpleLogger.defaultLogLevel"
+        private val ALLOWED_LOG_LEVELS = setOf("trace", "debug", "info", "warn", "error")
+
+        fun configureSimpleLoggerLogLevel(args: Array<String>) {
+            val requestedLogLevel = resolveLogLevelArg(args) ?: return
+            require(requestedLogLevel in ALLOWED_LOG_LEVELS) {
+                "Option --log-level must be one of: ${ALLOWED_LOG_LEVELS.joinToString()}"
+            }
+            System.setProperty(SIMPLE_LOGGER_DEFAULT_LEVEL_PROPERTY, requestedLogLevel)
+        }
+
+        private fun resolveLogLevelArg(args: Array<String>): String? {
+            for (i in args.indices) {
+                val arg = args[i]
+                if (arg.startsWith("--log-level=")) {
+                    return arg.substringAfter('=').lowercase()
+                }
+                if (arg == "--log-level" && i + 1 < args.size) {
+                    return args[i + 1].lowercase()
+                }
+            }
+            return null
+        }
+    }
 
     protected val installationId by option(
         ArgType.String,
@@ -59,6 +84,7 @@ abstract class AbstractCommand(
         description = "Path to project"
     ).default("")
 
+    @Suppress("unused")
     protected val logLevel by option(
         ArgType.String,
         fullName = "log-level",
@@ -132,9 +158,7 @@ abstract class AbstractCommand(
     }
 
     protected fun getService(): SrcSyncService {
-        val connector = SrcSyncConnector(createConnectorParams())
-        val projectPath = Paths.get(projectPath)
-        return SrcSyncService(connector, ObjectMapper(), projectPath)
+        return SrcSyncService(createConnectorParams(), ObjectMapper(), SrcFoldersParams(projectPath))
     }
 
     protected fun createRequest(): SrcRequest {

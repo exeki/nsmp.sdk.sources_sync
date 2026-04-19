@@ -1,4 +1,4 @@
-package ru.kazantsev.nsmp.sdk.sources_sync
+package ru.kazantsev.nsmp.sdk.sources_sync.service
 
 import kotlinx.serialization.json.Json
 import org.apache.hc.core5.http.ClassicHttpResponse

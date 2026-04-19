@@ -1,9 +1,11 @@
+@file:Suppress("SameParameterValue")
+
 package ru.kazantsev.nsmp.sdk.cli
 
 import org.junit.jupiter.api.BeforeEach
 import ru.kazantsev.nsmp.sdk.cli.commands.CommandArgs
 import ru.kazantsev.nsmp.sdk.runCli
-import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
@@ -99,7 +101,7 @@ abstract class CommandFunctionalTestBase {
     }
 
     protected fun assertPulledAdvImportExists(code: String) {
-        val advImportsRoot = testProjectDir.resolve(SrcSyncService.getDefaultAdvImportsPath())
+        val advImportsRoot = testProjectDir.resolve(SrcFoldersParams.getDefaultAdvImportsRelativePathString())
         val found = Files.walk(advImportsRoot).use { pathStream ->
             pathStream.anyMatch { path ->
                 Files.isRegularFile(path) && path.fileName.toString() == "$code.xml"

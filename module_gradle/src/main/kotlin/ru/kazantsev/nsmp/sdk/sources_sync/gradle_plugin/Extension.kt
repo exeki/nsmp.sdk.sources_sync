@@ -1,15 +1,33 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin
 
+import org.gradle.api.Project
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 
-open class Extension {
+open class Extension(val project: Project) {
     internal var installation: Installation? = null
+    internal var srcFoldersParams: SrcFoldersParams? = null
 
+    @Suppress("unused")
+    fun setSrcFoldersParams(
+        scriptsRelativePath: String,
+        modulesRelativePath: String,
+        advImportsRelativePath: String,
+    ) {
+        srcFoldersParams = SrcFoldersParams(
+            project.projectDir.path,
+            scriptsRelativePath,
+            modulesRelativePath,
+            advImportsRelativePath,
+        )
+    }
 
+    @Suppress("unused")
     fun setInstallation(installationId: String) {
         installation = InstallationByConfigFile(installationId)
     }
 
+    @Suppress("unused")
     fun setInstallation(installationId: String, connectorParamsPath: String) {
         installation = InstallationByConfigFileInPath(
             installationId,
@@ -17,6 +35,7 @@ open class Extension {
         )
     }
 
+    @Suppress("unused")
     fun setInstallation(
         installationId: String,
         scheme: String,
@@ -54,7 +73,7 @@ internal class InstallationByConfigFile(
 internal class InstallationByConfigFileInPath(
     override val installationId: String,
     val pathToConfigFile: String
-) :Installation() {
+) : Installation() {
     override val connectorParams: ConnectorParams
         get() = createConnectorParams()
 
