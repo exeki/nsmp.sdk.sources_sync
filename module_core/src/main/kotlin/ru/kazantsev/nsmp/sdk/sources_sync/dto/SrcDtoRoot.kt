@@ -12,8 +12,8 @@ class SrcDtoRoot(
 
     fun toInfo(): SrcInfoRoot {
         return SrcInfoRoot(
-            modules = this.scripts.map { it.info },
-            scripts = this.modules.map { it.info },
+            modules = this.modules.map { it.info },
+            scripts = this.scripts.map { it.info },
             advImports = this.advImports.map { it.info }
         )
     }
