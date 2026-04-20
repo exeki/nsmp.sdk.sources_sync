@@ -108,7 +108,7 @@ class SrcSyncService(
             val localSrcInfo = srcStorageService.readLocalSrcInfo(req)
             if (!localSrcInfo.isEmpty()) {
                 val diff = srcChecksumService.compareSrcInfo(remoteSrcInfo, localSrcInfo)
-                if (!diff.scripts.isEmpty()) throw SyncCheckFailedException(
+                if (!diff.isEmpty()) throw SyncCheckFailedException(
                     buildString {
                         append("Src check failed. Changed scripts=")
                         append(diff.scripts.map { it.code })
