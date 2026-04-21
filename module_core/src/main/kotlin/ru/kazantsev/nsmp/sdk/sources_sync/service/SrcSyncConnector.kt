@@ -1,7 +1,6 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service
 
 import kotlinx.serialization.json.Json
-import org.apache.hc.core5.http.ClassicHttpResponse
 import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
@@ -22,18 +21,6 @@ class SrcSyncConnector(params: ConnectorParams) : Connector(params) {
         ignoreUnknownKeys = true
     }
 
-    private fun checkStatus(response: ClassicHttpResponse) {
-        val status = response.code
-        if (status !in 200..<400) {
-            val body: String? = if (response.entity != null) EntityUtils.toString(response.entity) else null
-            throw BadResponseException(
-                BadResponseException.createErrorText(this.host, status.toString(), body),
-                status,
-                response
-            )
-        }
-    }
-
     fun getSrc(body : SrcRequest): ByteArray {
         val httpEntity = StringEntity(json.encodeToString(body), ContentType.APPLICATION_JSON)
         val response = this.execPost(
@@ -42,7 +29,7 @@ class SrcSyncConnector(params: ConnectorParams) : Connector(params) {
             paramsConst,
             null,
         )
-        checkStatus(response)
+        BadResponseException.throwIfNotOk(this, response)
         response.use {
             return EntityUtils.toByteArray(response.entity)
         }
@@ -56,7 +43,7 @@ class SrcSyncConnector(params: ConnectorParams) : Connector(params) {
             paramsConst,
             null,
         )
-        checkStatus(response)
+        BadResponseException.throwIfNotOk(this, response)
         val bodyText = EntityUtils.toString(response.entity, Charsets.UTF_8)
         return json.decodeFromString(bodyText)
     }
