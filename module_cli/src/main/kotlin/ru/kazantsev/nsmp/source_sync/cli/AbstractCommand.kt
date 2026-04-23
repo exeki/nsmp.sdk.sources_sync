@@ -8,7 +8,7 @@ import kotlinx.cli.default
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcRequest
 
 @OptIn(ExperimentalCli::class)
 abstract class AbstractCommand(
@@ -168,7 +168,7 @@ abstract class AbstractCommand(
             modulesExcluded = parseCsv(modulesExcludedCsv),
             scripts = parseCsv(scriptsCsv),
             allScripts = parseBooleanOption("allScripts", allScriptsRaw),
-            scriptsExcluded = parseCsv(scriptsExcludedCsv),
+            scriptCodesExcluded = parseCsv(scriptsExcludedCsv),
             advImports = parseCsv(advImportsCsv),
             allAdvImports = parseBooleanOption("allAdvImports", allAdvImportsRaw),
             advImportsExcluded = parseCsv(advImportsExcludedCsv),

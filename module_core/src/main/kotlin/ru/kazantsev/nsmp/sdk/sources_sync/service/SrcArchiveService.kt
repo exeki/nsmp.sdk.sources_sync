@@ -1,13 +1,14 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service
 
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDto
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDto
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcDtoRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcInfoRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcFormat
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcType
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalSrcFile
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfoFileRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.ScriptTextNotFound
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.zip.ZipEntry
@@ -17,11 +18,7 @@ import java.util.zip.ZipOutputStream
 /**
  * Сервис для работы с архивом `src`: упаковка, распаковка и преобразование checksum-ответа.
  */
-class SrcArchiveService(
-    private val scriptsSrcFolder: SrcFolder,
-    private val modulesSrcFolder: SrcFolder,
-    private val advImportsSrcFolder: SrcFolder,
-) {
+class SrcArchiveService {
     private val log = LoggerFactory.getLogger(javaClass)
     private val json = Json {
         ignoreUnknownKeys = true
@@ -32,55 +29,14 @@ class SrcArchiveService(
     }
 
     /**
-     * Собирает zip-архив из локальных source root.
-     */
-    fun buildSrcArchive(
-        root: SrcFileDtoRoot,
-
-        ): ByteArray {
-        log.debug(
-            "Build archive started: scripts={}, modules={}, advImports={}",
-            root.scripts.size,
-            root.modules.size,
-            root.advImports.size
-        )
-        val outputStream = ByteArrayOutputStream()
-
-        ZipOutputStream(outputStream).use { zipOutputStream ->
-            writeSourcesToArchive(
-                zipOutputStream,
-                scriptsSrcFolder,
-                "$SRC_PUSH_ARCHIVE_ROOT/scripts",
-                root.scripts
-            )
-            writeSourcesToArchive(
-                zipOutputStream,
-                modulesSrcFolder,
-                "$SRC_PUSH_ARCHIVE_ROOT/modules",
-                root.modules
-            )
-            writeSourcesToArchive(
-                zipOutputStream,
-                advImportsSrcFolder,
-                "$SRC_PUSH_ARCHIVE_ROOT/scripts/advimport",
-                root.advImports
-            )
-        }
-
-        val archive = outputStream.toByteArray()
-        log.debug("Build archive completed: size={} bytes", archive.size)
-        return archive
-    }
-
-    /**
      * Распаковывает архив с исходниками в DTO с текстами и метаданными исходников.
      */
-    fun unpackSrcArchive(srcArchive: ByteArray): SrcDtoRoot {
+    fun unpackSrcArchive(srcArchive: ByteArray): SrcSetRoot<RemoteSrcTextInfo> {
         log.debug("Unpack archive started: size={} bytes", srcArchive.size)
         val scriptTexts = mutableMapOf<String, String>()
         val moduleTexts = mutableMapOf<String, String>()
         val advImportTexts = mutableMapOf<String, String>()
-        var info: SrcInfoRoot? = null
+        var info: RemoteInfoFileRoot? = null
 
         ZipInputStream(ByteArrayInputStream(srcArchive)).use { zis ->
             var entry: ZipEntry? = zis.nextEntry
@@ -118,25 +74,25 @@ class SrcArchiveService(
 
         val srcInfo = info ?: throw Exception("File \"info.json\" not found")
 
-        val result = SrcDtoRoot(
+        val result = SrcSetRoot(
             scripts = srcInfo.scripts.map {
-                SrcDto(
+                RemoteSrcTextInfo(
                     info = it,
-                    text = scriptTexts[it.code] ?: throw Exception("Script text ${it.code} not found")
+                    text = scriptTexts[it.code] ?: throw ScriptTextNotFound(it.code, SrcType.SCRIPT)
                 )
-            },
+            }.toSet(),
             modules = srcInfo.modules.map {
-                SrcDto(
+                RemoteSrcTextInfo(
                     info = it,
-                    text = moduleTexts[it.code] ?: throw Exception("Module text ${it.code} not found")
+                    text = moduleTexts[it.code] ?: throw ScriptTextNotFound(it.code, SrcType.MODULE)
                 )
-            },
+            }.toSet(),
             advImports = srcInfo.advImports.map {
-                SrcDto(
+                RemoteSrcTextInfo(
                     info = it,
-                    text = advImportTexts[it.code] ?: throw Exception("AdvImport text ${it.code} not found")
+                    text = advImportTexts[it.code] ?: throw ScriptTextNotFound(it.code, SrcType.ADV_IMPORT)
                 )
-            }
+            }.toSet()
         )
         log.debug(
             "Unpack archive completed: scripts={}, modules={}, advImports={}",
@@ -147,15 +103,54 @@ class SrcArchiveService(
         return result
     }
 
+    /**
+     * Собирает zip-архив из локальных source root.
+     */
+    fun buildSrcArchive(
+        root: SrcSetRoot<LocalSrcFile>,
+        ): ByteArray {
+        log.debug(
+            "Build archive started: scripts={}, modules={}, advImports={}",
+            root.scripts.size,
+            root.modules.size,
+            root.advImports.size
+        )
+        val outputStream = ByteArrayOutputStream()
+
+        ZipOutputStream(outputStream).use { zipOutputStream ->
+            writeSourcesToArchive(
+                zipOutputStream,
+                SrcFormat.GROOVY.code,
+                "$SRC_PUSH_ARCHIVE_ROOT/scripts",
+                root.scripts
+            )
+            writeSourcesToArchive(
+                zipOutputStream,
+                SrcFormat.GROOVY.code,
+                "$SRC_PUSH_ARCHIVE_ROOT/modules",
+                root.modules
+            )
+            writeSourcesToArchive(
+                zipOutputStream,
+                SrcFormat.XML.code,
+                "$SRC_PUSH_ARCHIVE_ROOT/scripts/advimport",
+                root.advImports
+            )
+        }
+
+        val archive = outputStream.toByteArray()
+        log.debug("Build archive completed: size={} bytes", archive.size)
+        return archive
+    }
+
     private fun writeSourcesToArchive(
         zipOutputStream: ZipOutputStream,
-        srcFolder: SrcFolder,
+        format: String,
         archiveRoot: String,
-        sources: List<SrcFileDto>
+        sources: Set<LocalSrcFile>
     ) {
         sources.forEach { source ->
-            //val relativePath = srcFolder.getPath().toPath().relativize(source.file.toPath()).toString().replace(File.separatorChar, '/')
-            val entryName = "$archiveRoot/${source.code}.${srcFolder.format}"
+            val entryName = "$archiveRoot/${source.code}.${format}"
 
             zipOutputStream.putNextEntry(ZipEntry(entryName))
             source.file.inputStream().use { inputStream ->

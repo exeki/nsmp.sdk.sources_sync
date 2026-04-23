@@ -2,7 +2,7 @@ package ru.kazantsev.nsmp.sdk.sources_sync.service
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcFileDtoRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFileCodeDtoRoot
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -47,7 +47,7 @@ class SrcArchiveServicePushTest {
         scriptPath.parent.createDirectories()
         Files.writeString(scriptPath, scriptText)
 
-        val rootToPush = SrcFileDtoRoot(
+        val rootToPush = SrcFileCodeDtoRoot(
             scripts = scriptsFolder.findSourceFiles(
                 srcCodes = listOf("testScript1"),
                 all = false

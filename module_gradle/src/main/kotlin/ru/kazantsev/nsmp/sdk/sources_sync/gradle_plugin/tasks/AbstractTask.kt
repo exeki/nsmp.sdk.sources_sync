@@ -11,7 +11,7 @@ import org.gradle.api.tasks.options.Option
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
-import ru.kazantsev.nsmp.sdk.sources_sync.dto.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcRequest
 
 abstract class AbstractTask : DefaultTask() {
 
@@ -156,7 +156,7 @@ abstract class AbstractTask : DefaultTask() {
             modulesExcluded = parseCsvOption(modulesExcluded.orNull),
             scripts = parseCsvOption(scripts.orNull),
             allScripts = parseBooleanOption("allScripts", allScripts.orNull ?: "false"),
-            scriptsExcluded = parseCsvOption(scriptsExcluded.orNull),
+            scriptCodesExcluded = parseCsvOption(scriptsExcluded.orNull),
             advImports = parseCsvOption(advImports.orNull),
             allAdvImports = parseBooleanOption("allAdvImports", allAdvImports.orNull ?: "false"),
             advImportsExcluded = parseCsvOption(advImportsExcluded.orNull),

@@ -1,13 +1,13 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.dto
+package ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote
 
 /**
  * Данные о полученном исходнике
  */
-class SrcDto(
+class RemoteSrcTextInfo(
     /**
      * Информация о полученном исходнике
      */
-    val info: SrcInfo,
+    val info: RemoteSrcInfo,
     /**
      * Текст исходника
      */
