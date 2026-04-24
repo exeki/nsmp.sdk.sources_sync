@@ -14,18 +14,16 @@ class SyncCheckCommand : AbstractCommand(
             println("Src not in sync:")
             if (diff.scripts.isNotEmpty()) {
                 println("Scripts changed:")
-                diff.scripts.forEach { println("code : ${it.code}, checksum: ${it.checksum}") }
+                diff.scripts.forEach { println(it.code) }
             }
             if (diff.modules.isNotEmpty()) {
                 println("Modules changed:")
-                diff.modules.forEach { println("code : ${it.code}, checksum: ${it.checksum}") }
+                diff.modules.forEach {  println(it.code) }
             }
             if (diff.advImports.isNotEmpty()) {
                 println("Adv imports changed:")
-                diff.advImports.forEach { println("code : ${it.code}, checksum: ${it.checksum}") }
+                diff.advImports.forEach {  println(it.code) }
             }
-        } else {
-            println("All src in sync")
-        }
+        } else println("All src in sync")
     }
 }

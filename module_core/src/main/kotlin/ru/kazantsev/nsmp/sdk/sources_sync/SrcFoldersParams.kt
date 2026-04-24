@@ -1,5 +1,8 @@
 package ru.kazantsev.nsmp.sdk.sources_sync
 
+import java.nio.file.Path
+import java.nio.file.Paths
+
 class SrcFoldersParams(
     private val projectAbsolutePath: String,
     private val scriptsRelativePath: String = getDefaultRelativeScriptsPathString(),
@@ -22,6 +25,8 @@ class SrcFoldersParams(
     }
 
     fun getProjectAbsolutePathString(): String = projectAbsolutePath.replace("\\", "/")
+
+    fun getProjectAbsolutePath(): Path = Path.of(getProjectAbsolutePathString())
 
     fun getScriptsRelativePathString(): String = scriptsRelativePath.replace("\\", "/")
 

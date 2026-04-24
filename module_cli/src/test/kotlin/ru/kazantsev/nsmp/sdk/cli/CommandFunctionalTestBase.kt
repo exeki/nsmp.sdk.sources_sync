@@ -14,6 +14,8 @@ import java.nio.file.Paths
 
 abstract class CommandFunctionalTestBase {
 
+    val LOG_LEVEL = "info"
+
     data class CliResult(
         val exitCode: Int,
         val stderr: String
@@ -41,7 +43,7 @@ abstract class CommandFunctionalTestBase {
         val fullArgs = mutableListOf<String>()
         fullArgs += command
         fullArgs += splitOptionArgument(CommandArgs.PROJECT_PATH.withValue(testProjectDir.toString()))
-        fullArgs += splitOptionArgument(CommandArgs.LOG_LEVEL.withValue("debug"))
+        fullArgs += splitOptionArgument(CommandArgs.LOG_LEVEL.withValue(LOG_LEVEL))
         args.forEach { arg ->
             fullArgs += splitOptionArgument(arg)
         }

@@ -2,12 +2,14 @@ package ru.kazantsev.nsmp.sdk.sources_sync.service
 
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcFormat
-import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcType
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalSrcFile
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ILocalFile
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFormat
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfoFileRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSet
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.InfoFileNotFound
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.ScriptTextNotFound
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -72,7 +74,7 @@ class SrcArchiveService {
             }
         }
 
-        val srcInfo = info ?: throw Exception("File \"info.json\" not found")
+        val srcInfo = info ?: throw InfoFileNotFound()
 
         val result = SrcSetRoot(
             scripts = srcInfo.scripts.map {
@@ -106,8 +108,8 @@ class SrcArchiveService {
     /**
      * Собирает zip-архив из локальных source root.
      */
-    fun buildSrcArchive(
-        root: SrcSetRoot<LocalSrcFile>,
+    fun <T : ILocalFile> buildSrcArchive(
+        root: SrcSetRoot<T>,
         ): ByteArray {
         log.debug(
             "Build archive started: scripts={}, modules={}, advImports={}",
@@ -143,11 +145,11 @@ class SrcArchiveService {
         return archive
     }
 
-    private fun writeSourcesToArchive(
+    private fun <T : ILocalFile> writeSourcesToArchive(
         zipOutputStream: ZipOutputStream,
         format: String,
         archiveRoot: String,
-        sources: Set<LocalSrcFile>
+        sources: SrcSet<T>
     ) {
         sources.forEach { source ->
             val entryName = "$archiveRoot/${source.code}.${format}"

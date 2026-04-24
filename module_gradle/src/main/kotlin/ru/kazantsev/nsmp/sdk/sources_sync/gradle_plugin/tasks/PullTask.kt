@@ -21,19 +21,19 @@ abstract class PullTask : AbstractTask() {
         if(res.scripts.isNotEmpty()) {
             logger.info("scripts:")
             res.scripts.forEach {
-                logger.info(it.info.code)
+                logger.info(it.code)
             }
         }
         if(res.modules.isNotEmpty()) {
             logger.info("modules:")
             res.modules.forEach {
-                logger.info(it.info.code)
+                logger.info(it.code)
             }
         }
         if(res.advImports.isNotEmpty()) {
             logger.info("advImports:")
             res.advImports.forEach {
-                logger.info(it.info.code)
+                logger.info(it.code)
             }
         }
     }

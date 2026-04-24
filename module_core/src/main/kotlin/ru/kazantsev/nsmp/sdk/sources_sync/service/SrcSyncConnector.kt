@@ -6,11 +6,10 @@ import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
 import ru.kazantsev.nsmp.basic_api_connector.Connector
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.basic_api_connector.dto.nsmp.ScriptChecksums
 import ru.kazantsev.nsmp.basic_api_connector.exception.BadResponseException
-import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
 
 /**
  * Коннектор к NSMP
@@ -37,7 +36,7 @@ class SrcSyncConnector(params: ConnectorParams) : Connector(params) {
         }
     }
 
-    fun getSrcInfo(body : SrcRequest): SrcSetRoot<RemoteSrcInfo> {
+    fun getSrcInfo(body : SrcRequest): SrcSetRoot<RemoteInfo> {
         val httpEntity = StringEntity(json.encodeToString(body), ContentType.APPLICATION_JSON)
         val response = this.execPost(
             httpEntity,

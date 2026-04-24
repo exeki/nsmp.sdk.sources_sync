@@ -1,6 +1,6 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.data.signature
+package ru.kazantsev.nsmp.sdk.sources_sync.data.signature.root
 
-interface ISrcRoot<T : Any> {
+interface IRoot<T : Any> {
     val scripts: T
     val modules: T
     val advImports: T

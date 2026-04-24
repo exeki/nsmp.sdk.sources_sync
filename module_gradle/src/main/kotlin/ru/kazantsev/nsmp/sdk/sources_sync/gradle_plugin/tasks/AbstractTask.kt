@@ -11,7 +11,7 @@ import org.gradle.api.tasks.options.Option
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
-import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
 
 abstract class AbstractTask : DefaultTask() {
 
@@ -117,7 +117,6 @@ abstract class AbstractTask : DefaultTask() {
     protected fun createService(): SrcSyncService {
         return SrcSyncService(
             resolveConnectorParams(),
-            ObjectMapper(),
             resolveSrcFoldersParams()
         )
     }
@@ -133,12 +132,13 @@ abstract class AbstractTask : DefaultTask() {
     }
 
 
-    protected fun parseCsvOption(value: String?): List<String> {
+    protected fun parseCsvOption(value: String?): Set<String> {
         return value
             .orEmpty()
             .split(',')
             .map { it.trim() }
             .filter { it.isNotEmpty() }
+            .toSet()
     }
 
     protected fun parseBooleanOption(name: String, value: String): Boolean {
@@ -156,7 +156,7 @@ abstract class AbstractTask : DefaultTask() {
             modulesExcluded = parseCsvOption(modulesExcluded.orNull),
             scripts = parseCsvOption(scripts.orNull),
             allScripts = parseBooleanOption("allScripts", allScripts.orNull ?: "false"),
-            scriptCodesExcluded = parseCsvOption(scriptsExcluded.orNull),
+            scriptsExcluded = parseCsvOption(scriptsExcluded.orNull),
             advImports = parseCsvOption(advImports.orNull),
             allAdvImports = parseBooleanOption("allAdvImports", allAdvImports.orNull ?: "false"),
             advImportsExcluded = parseCsvOption(advImportsExcluded.orNull),

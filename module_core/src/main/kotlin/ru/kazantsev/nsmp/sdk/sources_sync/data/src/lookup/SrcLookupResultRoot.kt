@@ -1,0 +1,80 @@
+package ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup
+
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCode
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.root.IRoot
+
+class SrcLookupResultRoot<T : ISrcCode>(
+    override val scripts: SrcLookupResult<T>,
+    override val modules: SrcLookupResult<T>,
+    override val advImports: SrcLookupResult<T>
+) : IRoot<SrcLookupResult<T>> {
+
+    override fun isNotEmpty(): Boolean {
+        return scripts.found.isNotEmpty() || modules.found.isNotEmpty() || advImports.found.isNotEmpty()
+    }
+
+    fun convertToRequest(converter: (T) -> String): SrcRequest = SrcRequest(
+        scripts = this.scripts.found.map(converter).toSet(),
+        modules = this.modules.found.map(converter).toSet(),
+        advImports = this.advImports.found.map(converter).toSet()
+    )
+
+    fun hasNotFound(): Boolean {
+        return scripts.notFound.isNotEmpty() || modules.notFound.isNotEmpty() || advImports.notFound.isNotEmpty()
+    }
+
+    fun hasDuplicates(): Boolean {
+        return scripts.duplicated.isNotEmpty() || modules.duplicated.isNotEmpty() || advImports.duplicated.isNotEmpty()
+    }
+
+    fun convertToSrcSetRoot(): SrcSetRoot<T> = SrcSetRoot(
+        scripts = this.scripts.found,
+        modules = this.modules.found,
+        advImports = this.advImports.found
+    )
+
+    private fun <K : ISrcCode> convertSrcLookupResult(
+        srcLookupResult: SrcLookupResult<T>,
+        convertor: (T) -> K
+    ): SrcLookupResult<K> = SrcLookupResult(
+        found = srcLookupResult.found.map(convertor).toSet(),
+        notFound = srcLookupResult.notFound,
+        duplicated = srcLookupResult.duplicated,
+        type = srcLookupResult.type,
+    )
+
+    fun <K : ISrcCode> convert(convertor: (T) -> K): SrcLookupResultRoot<K> = SrcLookupResultRoot(
+        scripts = convertSrcLookupResult(this.scripts, convertor),
+        modules = convertSrcLookupResult(this.modules, convertor),
+        advImports = convertSrcLookupResult(this.advImports, convertor)
+    )
+
+    fun <K : ISrcCode> convertToSrcSetRoot(convertor: (T) -> K): SrcSetRoot<K> = convertToSrcSetRoot(
+        scriptConvertor = convertor,
+        moduleConvertor = convertor,
+        advImportConvertor = convertor
+    )
+
+    fun <K : ISrcCode> convertToSrcSetRoot(
+        scriptConvertor: (T) -> K,
+        moduleConvertor: (T) -> K,
+        advImportConvertor: (T) -> K
+    ): SrcSetRoot<K> = SrcSetRoot(
+        scripts = this.scripts.found.map(scriptConvertor).toSet(),
+        modules = this.modules.found.map(moduleConvertor).toSet(),
+        advImports = this.advImports.found.map(advImportConvertor).toSet()
+    )
+
+    companion object {
+        fun <T : ISrcCode> empty(): SrcLookupResultRoot<T> {
+            return SrcLookupResultRoot(
+                scripts = SrcLookupResult.empty(SrcType.SCRIPT),
+                modules = SrcLookupResult.empty(SrcType.MODULE),
+                advImports = SrcLookupResult.empty(SrcType.ADV_IMPORT)
+            )
+        }
+    }
+}
