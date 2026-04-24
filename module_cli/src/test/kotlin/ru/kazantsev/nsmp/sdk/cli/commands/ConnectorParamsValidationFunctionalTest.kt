@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.cli.commands
 
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.cli.CommandFunctionalTestBase
+import ru.kazantsev.nsmp.source_sync.cli.AbstractCommand
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -20,7 +21,7 @@ class ConnectorParamsValidationFunctionalTest : CommandFunctionalTestBase() {
         )
 
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("Connector options must use either config file mode"))
+        assertTrue(result.stderr.contains(AbstractCommand.CONNECTOR_MODES_VALIDATION_MSG))
     }
 
     @Test
@@ -34,7 +35,7 @@ class ConnectorParamsValidationFunctionalTest : CommandFunctionalTestBase() {
         )
 
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("Direct connector mode requires --accessKey"))
+        assertTrue(result.stderr.contains("${AbstractCommand.DIRECT_CONNECTOR_MODE_REQUIRED_MSG} --accessKey"))
     }
 
     @Test
@@ -46,6 +47,6 @@ class ConnectorParamsValidationFunctionalTest : CommandFunctionalTestBase() {
         )
 
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("Option --installationId is required"))
+        assertTrue(result.stderr.contains(AbstractCommand.INSTALLATION_ID_REQUIRED_MSG))
     }
 }

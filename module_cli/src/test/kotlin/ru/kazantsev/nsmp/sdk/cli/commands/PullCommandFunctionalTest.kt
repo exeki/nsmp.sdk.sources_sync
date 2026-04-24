@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.cli.commands
 
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.cli.CommandFunctionalTestBase
+import ru.kazantsev.nsmp.source_sync.cli.AbstractCommand
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
 import java.nio.file.Files
@@ -15,7 +16,7 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
     override fun checkExists() {
         val result = runCommand(commandName)
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("SMP installation identifier is not configured"))
+        assertTrue(result.stderr.contains(AbstractCommand.INSTALLATION_ID_NOT_CONFIGURED_MSG))
     }
 
     @Test

@@ -18,6 +18,12 @@ abstract class AbstractCommand(
     companion object {
         private const val SIMPLE_LOGGER_DEFAULT_LEVEL_PROPERTY = "org.slf4j.simpleLogger.defaultLogLevel"
         private val ALLOWED_LOG_LEVELS = setOf("trace", "debug", "info", "warn", "error")
+        const val INSTALLATION_ID_NOT_CONFIGURED_MSG = "SMP installation identifier is not configured"
+        const val INSTALLATION_ID_REQUIRED_MSG =
+            "Option --installationId is required when connector options are provided explicitly"
+        const val CONNECTOR_MODES_VALIDATION_MSG =
+            "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
+        const val DIRECT_CONNECTOR_MODE_REQUIRED_MSG = "Direct connector mode requires"
 
         fun configureSimpleLoggerLogLevel(args: Array<String>) {
             val requestedLogLevel = resolveLogLevelArg(args) ?: return
@@ -154,7 +160,7 @@ abstract class AbstractCommand(
         } else if (installationId.isNotEmpty() && scheme.isNotEmpty() && host.isNotEmpty() && accessKey.isNotEmpty()) {
             ConnectorParams(installationId, scheme, host, accessKey, ignoreSsl)
         } else if (installationId.isNotEmpty()) ConnectorParams.byConfigFile(installationId)
-        else throw IllegalStateException("SMP installation identifier is not configured")
+        else throw IllegalStateException(INSTALLATION_ID_NOT_CONFIGURED_MSG)
     }
 
     protected fun getService(): SrcSyncService {
@@ -197,13 +203,11 @@ abstract class AbstractCommand(
         val hasAnyConnectorOverride = hasConfigPath || hasDirectOptions
 
         if (!hasInstallationId && hasAnyConnectorOverride) {
-            throw IllegalArgumentException("Option --installationId is required when connector options are provided explicitly")
+            throw IllegalArgumentException(INSTALLATION_ID_REQUIRED_MSG)
         }
 
         if (hasConfigPath && hasDirectOptions) {
-            throw IllegalArgumentException(
-                "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
-            )
+            throw IllegalArgumentException(CONNECTOR_MODES_VALIDATION_MSG)
         }
 
         if (hasDirectOptions) {
@@ -214,7 +218,7 @@ abstract class AbstractCommand(
             }
             if (missingOptions.isNotEmpty()) {
                 throw IllegalArgumentException(
-                    "Direct connector mode requires ${missingOptions.joinToString()}"
+                    "$DIRECT_CONNECTOR_MODE_REQUIRED_MSG ${missingOptions.joinToString()}"
                 )
             }
         }

@@ -20,7 +20,7 @@ class ConnectorParamsValidationFunctionalTest : PluginFunctionalTestBase() {
             TaskArgs.ACCESS_KEY.withDefaultValue()
         ).buildAndFail()
 
-        assertTrue(result.output.contains("Connector options must use either config file mode"))
+        assertTrue(result.output.contains(AbstractTask.CONNECTOR_MODES_VALIDATION_MSG))
     }
 
     @Test
@@ -35,7 +35,7 @@ class ConnectorParamsValidationFunctionalTest : PluginFunctionalTestBase() {
             TaskArgs.HOST.withDefaultValue()
         ).buildAndFail()
 
-        assertTrue(result.output.contains("Direct connector mode requires --accessKey"))
+        assertTrue(result.output.contains("${AbstractTask.DIRECT_CONNECTOR_MODE_REQUIRED_MSG} --accessKey"))
     }
 
     @Test
@@ -48,6 +48,6 @@ class ConnectorParamsValidationFunctionalTest : PluginFunctionalTestBase() {
             TaskArgs.CONFIG_PATH.withDefaultValue()
         ).buildAndFail()
 
-        assertTrue(result.output.contains("Option --installationId is required"))
+        assertTrue(result.output.contains(AbstractTask.INSTALLATION_ID_REQUIRED_MSG))
     }
 }

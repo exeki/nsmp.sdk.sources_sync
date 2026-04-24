@@ -13,6 +13,13 @@ import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
 
 abstract class AbstractTask : DefaultTask() {
+    companion object {
+        const val INSTALLATION_ID_REQUIRED_MSG =
+            "Option --installationId is required when connector options are provided explicitly"
+        const val CONNECTOR_MODES_VALIDATION_MSG =
+            "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
+        const val DIRECT_CONNECTOR_MODE_REQUIRED_MSG = "Direct connector mode requires"
+    }
 
     @get:Internal
     var connectorParamsProvider: Provider<ConnectorParams>? = null
@@ -175,13 +182,11 @@ abstract class AbstractTask : DefaultTask() {
         val hasAnyConnectorOverride = hasConfigPath || hasDirectOptions
 
         if (!hasInstallationId && hasAnyConnectorOverride) {
-            throw IllegalArgumentException("Option --installationId is required when connector options are provided explicitly")
+            throw IllegalArgumentException(INSTALLATION_ID_REQUIRED_MSG)
         }
 
         if (hasConfigPath && hasDirectOptions) {
-            throw IllegalArgumentException(
-                "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
-            )
+            throw IllegalArgumentException(CONNECTOR_MODES_VALIDATION_MSG)
         }
 
         if (hasDirectOptions) {
@@ -192,7 +197,7 @@ abstract class AbstractTask : DefaultTask() {
             }
             if (missingOptions.isNotEmpty()) {
                 throw IllegalArgumentException(
-                    "Direct connector mode requires ${missingOptions.joinToString()}"
+                    "$DIRECT_CONNECTOR_MODE_REQUIRED_MSG ${missingOptions.joinToString()}"
                 )
             }
         }
