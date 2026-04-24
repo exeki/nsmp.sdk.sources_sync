@@ -46,8 +46,8 @@ open class SrcSetRoot<T : ISrcCode>(
         advImports = this.advImports.convert(advImportTransform)
     )
 
-
     companion object {
+        @Suppress("unused")
         fun <T : ISrcCode> empty(): SrcSetRoot<T> = SrcSetRoot(
             scripts = emptySet(),
             modules = emptySet(),

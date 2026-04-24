@@ -1,35 +1,26 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.ExceptionUtils
 
-class DuplicatedLocalSrcFileFoundException(lookupResult: SrcLookupResultRoot<*>) : LocalSrcException(getMessage(lookupResult)) {
-
+class DuplicatedLocalSrcFileFoundException(
     @Suppress("unused")
-    val duplicatedSrcCodes = SetRoot(
+    val lookupResult: SrcLookupResultRoot<LocalFile>
+) : LocalSrcException(
+    ExceptionUtils.buildMessageForLookup(
+        start = MSG,
         scripts = lookupResult.scripts.duplicated,
         modules = lookupResult.modules.duplicated,
-        advImports = lookupResult.advImports.duplicated,
+        advImports = lookupResult.advImports.duplicated
     )
+) {
 
-    companion object  {
-         fun throwIfNecessary(lookupResult : SrcLookupResultRoot<*>)  {
-            if(lookupResult.hasDuplicates()) throw DuplicatedLocalSrcFileFoundException(lookupResult)
-        }
+    companion object {
+        const val MSG = "Some local src files duplicated:"
 
-        private fun getMessage(lookupResult: SrcLookupResultRoot<*>): String {
-            return buildString {
-                append("Some local src files duplicated:")
-                if (lookupResult.scripts.duplicated.isNotEmpty()) append(
-                    " scripts: ${lookupResult.scripts.notFound.joinToString(", ")}"
-                )
-                if (lookupResult.modules.duplicated.isNotEmpty()) append(
-                    " modules: ${lookupResult.modules.notFound.joinToString(", ")}"
-                )
-                if (lookupResult.advImports.duplicated.isNotEmpty()) append(
-                    " advImports: ${lookupResult.advImports.notFound.joinToString(", ")}"
-                )
-            }
+        fun throwIfNecessary(lookupResult: SrcLookupResultRoot<LocalFile>) {
+            if (lookupResult.hasDuplicates()) throw DuplicatedLocalSrcFileFoundException(lookupResult)
         }
     }
 }

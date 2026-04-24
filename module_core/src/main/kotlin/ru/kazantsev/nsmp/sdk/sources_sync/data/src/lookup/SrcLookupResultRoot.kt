@@ -52,16 +52,6 @@ class SrcLookupResultRoot<T : ISrcCode>(
         advImports = convertSrcLookupResult(this.advImports, convertor)
     )
 
-    fun <K : ISrcCode> convertToSrcSetRoot(
-        scriptTransform: (T) -> K,
-        moduleTransform: (T) -> K,
-        advImportTransform: (T) -> K
-    ): SrcSetRoot<K> = SrcSetRoot(
-        scripts = this.scripts.found.map(scriptTransform).toSet(),
-        modules = this.modules.found.map(moduleTransform).toSet(),
-        advImports = this.advImports.found.map(advImportTransform).toSet()
-    )
-
     companion object {
         @Suppress("unused")
         fun <T : ISrcCode> empty(): SrcLookupResultRoot<T> {

@@ -6,6 +6,7 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcSyncCheckPair
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
 
 class SyncCheckFailedException(
+    @Suppress("CanBeParameter")
     val localSrcInfoRoot: SrcSetRoot<SrcSyncCheckPair<LocalFileInfo, RemoteInfo>>
 ) : CommandException(getMessage(localSrcInfoRoot)) {
     companion object {

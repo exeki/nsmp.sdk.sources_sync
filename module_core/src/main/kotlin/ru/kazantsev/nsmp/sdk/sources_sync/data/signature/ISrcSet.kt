@@ -1,6 +1,5 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.data.signature
 
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 
 interface ISrcSet<T : ISrcCode> : Set<T> {

@@ -3,7 +3,6 @@ package ru.kazantsev.nsmp.sdk.sources_sync
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalChecksum
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcSyncCheckPair
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo

@@ -2,7 +2,6 @@ package ru.kazantsev.nsmp.sdk.sources_sync.data.src.local
 
 import kotlinx.serialization.Serializable
 import ru.kazantsev.nsmp.basic_api_connector.dto.nsmp.SrcChecksum
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalSrc
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalChecksum
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
 import java.time.LocalDateTime

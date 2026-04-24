@@ -20,6 +20,7 @@ open class SetRoot<T : Any>(
     )
 
     companion object {
+        @Suppress("unused")
         fun <T : ISrcCode> empty(): SetRoot<T> {
             return SetRoot(
                 scripts = emptySet(),
