@@ -1,7 +1,6 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.ExceptionUtils
 
 class RemoteSrcFilesNotFoundException(
