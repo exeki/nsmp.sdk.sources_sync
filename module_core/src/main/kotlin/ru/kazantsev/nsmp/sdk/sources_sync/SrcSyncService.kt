@@ -53,13 +53,33 @@ class SrcSyncService(
     fun syncCheck(req: SrcRequest): SrcSetRoot<SrcSyncCheckPair<LocalFileInfo, RemoteInfo>> {
         log.info("Diff started: {}", req)
         val localRoot = localSrcService.getLocalSrc(req)
-        return syncCheck(localRoot)
+        val result = syncCheck(localRoot)
+        log.info(
+            "Diff completed: scripts={}, modules={}, advImports={}",
+            result.scripts.size,
+            result.modules.size,
+            result.advImports.size
+        )
+        return result
     }
 
     private fun <T : ISrcCodeChecksum> syncCheck(localRoot: SrcSetRoot<T>): SrcSetRoot<SrcSyncCheckPair<T, RemoteInfo>> {
         val req = localRoot.convertToRequest()
+        log.debug(
+            "Sync check comparison started: scripts={}, modules={}, advImports={}",
+            localRoot.scripts.size,
+            localRoot.modules.size,
+            localRoot.advImports.size
+        )
         val remoteRoot = remoteSrcService.getRemoteSrcInfo(req).convertToSrcSetRoot()
-        return srcChecksumService.compareSrcSetRoots(localRoot, remoteRoot)
+        val diff = srcChecksumService.compareSrcSetRoots(localRoot, remoteRoot)
+        log.debug(
+            "Sync check comparison completed: scripts={}, modules={}, advImports={}",
+            diff.scripts.size,
+            diff.modules.size,
+            diff.advImports.size
+        )
+        return diff
     }
 
     /**

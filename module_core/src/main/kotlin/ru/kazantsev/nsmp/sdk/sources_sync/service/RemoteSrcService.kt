@@ -89,7 +89,20 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
      * Отправить исходники на инсталляцию
      */
     fun <T : ILocalFile> sendRemoteSrc(root: SrcSetRoot<T>): ScriptChecksums {
+        log.info(
+            "Remote src upload started: scripts={}, modules={}, advImports={}",
+            root.scripts.size,
+            root.modules.size,
+            root.advImports.size
+        )
         val archive = srcArchiveService.buildSrcArchive(root)
-        return connector.pushScripts(archive)
+        val result = connector.pushScripts(archive)
+        log.info(
+            "Remote src upload completed: scripts={}, modules={}, advImports={}",
+            result.scripts.size,
+            result.modules.size,
+            result.advimports.size
+        )
+        return result
     }
 }
