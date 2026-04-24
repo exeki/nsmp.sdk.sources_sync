@@ -4,20 +4,19 @@ import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.LocalStorage
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcSetRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSet
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import java.io.File
 import java.nio.file.Path
 
 /**
  * Сервис для локального хранилища метаданных `src` в `.smp_sdk/src_info.json`.
  */
-class LocalSrcInfoService(private val projectPath: Path, ) {
+class LocalSrcInfoService(private val projectPath: Path) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val json = Json {
         prettyPrint = true
@@ -41,32 +40,32 @@ class LocalSrcInfoService(private val projectPath: Path, ) {
     /**
      * Читает локальный файл с информацией целиком
      */
-    fun readLocalSrcInfo(): SrcSetRoot<LocalInfo> {
+    fun readLocalSrcInfo(): LocalStorage {
         log.debug("Read local info: file={}", infoFilePath)
         if (!infoFilePath.exists() || infoFilePath.readText().isBlank()) {
             log.debug("Local info file not found or empty")
-            return SrcSetRoot.empty()
+            return LocalStorage.empty()
         }
         val serializer = LocalStorage.serializer()
-        val localStorage = json.decodeFromString(serializer, infoFilePath.readText())
-        return SrcSetRoot(
+        return json.decodeFromString(serializer, infoFilePath.readText())
+    }
+
+    /**
+     * Выполнить поиск по информации по исходникам
+     * @param req запрос
+     * @return результаты поиска
+     */
+    fun lookupLocalSrcInfo(req: SrcRequest): SrcLookupResultRoot<LocalInfo> {
+        val localStorage = readLocalSrcInfo()
+        val srcInfo = SrcSetRoot(
             scripts = localStorage.scripts,
             modules = localStorage.modules,
             advImports = localStorage.advImports
         )
-    }
-
-    /**
-     * Читает локальную информацию об исходниках.
-     *
-     * При необходимости фильтрует данные по кодам scripts/modules.
-     */
-    fun readLocalSrcInfo(req: SrcRequest): SrcLookupResultRoot<LocalInfo> {
-        val srcInfo = readLocalSrcInfo()
         val filtered = SrcLookupResultRoot(
-            scripts = lookupForInfo(srcInfo.scripts, req.getScriptsRequest()),
-            modules = lookupForInfo(srcInfo.modules, req.getModulesRequest()),
-            advImports = lookupForInfo(srcInfo.advImports, req.getAdvImportsRequest()),
+            scripts = lookupForLocalInfo(srcInfo.scripts, req.getScriptsRequest()),
+            modules = lookupForLocalInfo(srcInfo.modules, req.getModulesRequest()),
+            advImports = lookupForLocalInfo(srcInfo.advImports, req.getAdvImportsRequest()),
         )
         log.debug(
             "Scripts local info found: {}, notFound: {}, duplicated: {}",
@@ -90,9 +89,18 @@ class LocalSrcInfoService(private val projectPath: Path, ) {
     }
 
     /**
+     * Получить информацию по исходникам
+     * @param req запрос
+     * @return набор сетов
+     */
+    fun getLocalSrcInfo(req: SrcRequest): SrcSetRoot<LocalInfo> {
+        return lookupLocalSrcInfo(req).convertToSrcSetRoot()
+    }
+
+    /**
      * Обновляет локальный файл метаданных, объединяя старые и новые записи по коду.
      */
-    fun updateInfoFile(root: SrcSetRoot<LocalInfo>) {
+    fun updateInfoFile(root: SrcSetRoot<LocalInfo>): SrcSetRoot<LocalInfo> {
         log.debug(
             "Update local info file started: scripts={}, modules={}, advImports={}",
             root.scripts.size,
@@ -106,7 +114,7 @@ class LocalSrcInfoService(private val projectPath: Path, ) {
         }
 
         val currentRoot = readLocalSrcInfo()
-        val updatedRoot = SrcSetRoot(
+        val updatedRoot = LocalStorage(
             scripts = mergeEntries(currentRoot.scripts, root.scripts),
             modules = mergeEntries(currentRoot.modules, root.modules),
             advImports = mergeEntries(currentRoot.advImports, root.advImports),
@@ -114,6 +122,7 @@ class LocalSrcInfoService(private val projectPath: Path, ) {
 
         currentInfoFile.writeText(json.encodeToString(updatedRoot))
         log.debug("Update local info file completed: file={}", currentInfoFile)
+        return root
     }
 
     private fun mergeEntries(existingEntries: Set<LocalInfo>, incomingEntries: Set<LocalInfo>): Set<LocalInfo> {
@@ -130,9 +139,9 @@ class LocalSrcInfoService(private val projectPath: Path, ) {
         return byCode.values.toSet()
     }
 
-    private fun lookupForInfo(
+    private fun lookupForLocalInfo(
         localSrcInfo: SrcSet<LocalInfo>,
-        req : SrcSetRequest
+        req: SrcSetRequest
     ): SrcLookupResult<LocalInfo> {
         return if (req.all) SrcLookupResult(
             found = localSrcInfo.filter { !req.excludedCodes.contains(it.code) }.toSet(),

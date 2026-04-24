@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class RemoteInfoFileRoot(
-    val scripts: List<RemoteInfo>,
-    val modules: List<RemoteInfo>,
-    val advImports: List<RemoteInfo>,
+    val scripts: Set<RemoteInfo>,
+    val modules: Set<RemoteInfo>,
+    val advImports: Set<RemoteInfo>,
 )

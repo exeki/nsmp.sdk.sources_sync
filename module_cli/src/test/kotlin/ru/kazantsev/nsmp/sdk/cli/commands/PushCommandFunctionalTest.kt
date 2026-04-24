@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.cli.commands
 
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.cli.CommandFunctionalTestBase
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -61,7 +62,7 @@ class PushCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("No local sources found to push"))
+        assertTrue(result.stderr.contains(EmptySrcRequestException.MSG))
     }
 
     @Test
@@ -141,6 +142,6 @@ class PushCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
             CommandArgs.FORCE.withValue("true"),
             *connectorArgsByConfigFile()
         )
-        assertEquals(1, result.exitCode)
+        assertEquals(0, result.exitCode)
     }
 }

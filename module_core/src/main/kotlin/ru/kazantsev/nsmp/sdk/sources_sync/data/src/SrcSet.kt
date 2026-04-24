@@ -1,8 +1,7 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.data.src.set
+package ru.kazantsev.nsmp.sdk.sources_sync.data.src
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcSet
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCode
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
 
 open class SrcSet<T : ISrcCode>(
     set: Set<T>,

@@ -1,7 +1,7 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote
 
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.IRemoteSrc
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCodeChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.remote.IRemoteSrc
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.remote.IRemoteChecksum
 
 /**
  * Данные о полученном исходнике
@@ -15,7 +15,7 @@ class RemoteSrcTextInfo(
      * Текст исходника
      */
     val text: String
-) : ISrcCodeChecksum, IRemoteSrc {
+) : IRemoteChecksum {
 
     override val code: String
         get() = info.code

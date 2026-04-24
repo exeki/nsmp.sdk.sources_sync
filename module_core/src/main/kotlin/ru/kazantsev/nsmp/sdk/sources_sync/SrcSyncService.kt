@@ -2,17 +2,17 @@ package ru.kazantsev.nsmp.sdk.sources_sync
 
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCodeChecksum
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcSyncCheckPair
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptyPullResponse
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcPair
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.SyncCheckFailedException
-import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcChecksumService
+import ru.kazantsev.nsmp.sdk.sources_sync.service.ComparisonService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.RemoteSrcService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.LocalSrcService
 
@@ -25,19 +25,20 @@ class SrcSyncService(
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    val srcChecksumService = SrcChecksumService()
+    val comparisonService = ComparisonService()
     val remoteSrcService = RemoteSrcService(connectorParams)
     val localSrcService = LocalSrcService(srcFoldersParams)
 
     /**
-     * Загружает исходники с сервера и сохраняет их в локальные source sets.
+     * Загружает исходники с сервера и сохраняет их в локальные source sets
+     * @param req запрос, в соответствии с которым будет сформирован запрос к серверу
+     * @return
      */
     fun pull(req: SrcRequest): SrcSetRoot<LocalFileInfo> {
+        EmptySrcRequestException.throwIfNecessary(req)
         log.info("Fetch started: req={}", req)
         val root = remoteSrcService.getRemoteSrc(req)
-        if (root.isEmpty()) throw EmptyPullResponse()
-        //TODO проверки
-        val result = localSrcService.whiteLocalSrc(root.convertToSrcSetRoot())
+        val result = localSrcService.whiteLocalSrc(root)
         log.info(
             "Fetch completed: scripts={}, modules={}, advImports={}",
             result.scripts.size,
@@ -48,9 +49,12 @@ class SrcSyncService(
     }
 
     /**
-     * Получает чексуммы с сервера и сравнивает их с локальным хранилищем.
+     * Получает чексуммы с сервера и сравнивает их с локальным хранилищем
+     * @param req запрос, в соответствии с которым будет проведен поиск исходников для сверки
+     * @return набор сетов, который состоят из пар локальной и удаленной информации об исходнике
      */
     fun syncCheck(req: SrcRequest): SrcSetRoot<SrcSyncCheckPair<LocalFileInfo, RemoteInfo>> {
+        EmptySrcRequestException.throwIfNecessary(req)
         log.info("Diff started: {}", req)
         val localRoot = localSrcService.getLocalSrc(req)
         val result = syncCheck(localRoot)
@@ -63,7 +67,7 @@ class SrcSyncService(
         return result
     }
 
-    private fun <T : ISrcCodeChecksum> syncCheck(localRoot: SrcSetRoot<T>): SrcSetRoot<SrcSyncCheckPair<T, RemoteInfo>> {
+    private fun <T : ILocalChecksum> syncCheck(localRoot: SrcSetRoot<T>): SrcSetRoot<SrcSyncCheckPair<T, RemoteInfo>> {
         val req = localRoot.convertToRequest()
         log.debug(
             "Sync check comparison started: scripts={}, modules={}, advImports={}",
@@ -71,8 +75,8 @@ class SrcSyncService(
             localRoot.modules.size,
             localRoot.advImports.size
         )
-        val remoteRoot = remoteSrcService.getRemoteSrcInfo(req).convertToSrcSetRoot()
-        val diff = srcChecksumService.compareSrcSetRoots(localRoot, remoteRoot)
+        val remoteRoot = remoteSrcService.getRemoteSrcInfo(req)
+        val diff = comparisonService.compareSyncCheck(localRoot, remoteRoot)
         log.debug(
             "Sync check comparison completed: scripts={}, modules={}, advImports={}",
             diff.scripts.size,
@@ -84,28 +88,36 @@ class SrcSyncService(
 
     /**
      * Собирает локальные исходники, проверяет их чексуммами и отправляет на сервер.
+     * @param req запрос, в соответствии с которым будут собраны исходники для отправки
+     * @param force при указании флага пропускает сверку по чексуммам
+     * @return информация об исходниках после изменения и информация о чексуммах сервера до изменения
      */
     fun push(
         req: SrcRequest,
         force: Boolean = false
-    ): SrcSetRoot<LocalFileInfo> {
+    ): SrcSetRoot<SrcPair<LocalFileInfo, RemoteInfo>> {
+        EmptySrcRequestException.throwIfNecessary(req)
         log.info("Push started: req={}, force={}", req, force)
         val localRoot = localSrcService.getLocalSrc(req)
+        val remoteRoot = remoteSrcService.getRemoteSrcInfo(req)
         if (!force) {
-            val remoteSrcInfo = remoteSrcService.getRemoteSrcInfo(req).convertToSrcSetRoot()
-            val diff = srcChecksumService.compareSrcSetRoots(localRoot, remoteSrcInfo)
+            val diff = comparisonService.compareSyncCheck(localRoot, remoteRoot)
             SyncCheckFailedException.throwIfNecessary(diff)
         } else log.warn("force push enabled!")
-        val scriptsChecksums = remoteSrcService.sendRemoteSrc(localRoot)
-        localSrcService.updateInfoFile(scriptsChecksums)
+        val scriptChecksums = remoteSrcService.sendRemoteSrc(localRoot)
+        val updatedLocalInfo = localSrcService.updateInfoFile(scriptChecksums)
         log.info(
             "Push completed: scripts={}, modules={}, advImports={}",
-            scriptsChecksums.scripts.size,
-            scriptsChecksums.modules.size,
-            scriptsChecksums.advimports.size
+            scriptChecksums.scripts.size,
+            scriptChecksums.modules.size,
+            scriptChecksums.advimports.size
         )
-        return localSrcService.getLocalSrc(req)
+        return comparisonService.compareSrcSetRoots(
+            remoteRoot = remoteRoot,
+            localRoot = localSrcService.compareLocalFileAndInfo(
+                fileRoot = localRoot,
+                infoRoot = updatedLocalInfo
+            )
+        )
     }
-
-
 }

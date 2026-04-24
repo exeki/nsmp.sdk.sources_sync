@@ -1,13 +1,12 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local
+package ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SetRoot
 
-class LocalSrcFilesNotFoundException(
+class RemoteSrcFilesNotFoundException(
     lookupResult: SrcLookupResultRoot<*>
-) : LocalSrcException(getMessage(lookupResult)) {
+) : RemoteSrcException(getMessage(lookupResult)) {
 
-    @Suppress("unused")
     val notFoundSrcCodes = SetRoot(
         scripts = lookupResult.scripts.notFound,
         modules = lookupResult.modules.notFound,
@@ -17,12 +16,12 @@ class LocalSrcFilesNotFoundException(
     companion object  {
 
          fun throwIfNecessary(lookupResult : SrcLookupResultRoot<*>) {
-            if(lookupResult.hasNotFound()) throw LocalSrcFilesNotFoundException(lookupResult)
+            if(lookupResult.hasNotFound()) throw RemoteSrcFilesNotFoundException(lookupResult)
         }
 
         private fun getMessage(lookupResult: SrcLookupResultRoot<*>): String {
             return buildString {
-                append("Some local src files not found:")
+                append("Some remote src files not found:")
                 if (lookupResult.scripts.notFound.isNotEmpty()) append(
                     " scripts: ${lookupResult.scripts.notFound.joinToString(", ")}"
                 )

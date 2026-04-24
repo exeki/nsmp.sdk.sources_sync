@@ -1,8 +1,8 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCode
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSet
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 
 
 class SrcLookupResult<T : ISrcCode>(

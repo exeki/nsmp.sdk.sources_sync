@@ -9,4 +9,10 @@ class LocalStorage (
     val modules : Set<LocalInfo>,
     val advImports : Set<LocalInfo>
 ) {
+
+    companion object {
+        fun empty() : LocalStorage {
+            return LocalStorage(emptySet(), emptySet(), emptySet())
+        }
+    }
 }

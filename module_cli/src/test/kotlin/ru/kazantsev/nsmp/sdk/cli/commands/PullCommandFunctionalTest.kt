@@ -2,6 +2,8 @@ package ru.kazantsev.nsmp.sdk.cli.commands
 
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.cli.CommandFunctionalTestBase
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -59,7 +61,7 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains("No remote source files found"))
+        assertTrue(result.stderr.contains(EmptySrcRequestException.MSG))
     }
 
     @Test
@@ -144,7 +146,7 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
         )
         assertEquals(0, result.exitCode)
         assertPulledScriptExists("testScript1")
-        val excludedScript = testProjectDir.resolve("src/main/scripts")
+        val excludedScript = testProjectDir.resolve(SrcFoldersParams.getDefaultRelativeScriptsPathString())
         val foundExcluded = Files.walk(excludedScript).use { pathStream ->
             pathStream.anyMatch { path ->
                 Files.isRegularFile(path) && path.fileName.toString() == "testScript2.groovy"

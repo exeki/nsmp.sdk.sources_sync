@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.PluginFunctionalTestBase
 
 class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
@@ -32,7 +33,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkCliConnectorParamsDirect() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
 
         val result = runner(
             taskName,
@@ -48,7 +52,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkCliConnectorParamsByConfigFileInPath() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
 
         val result = runner(
             taskName,
@@ -64,7 +71,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkCliConnectorParamsByConfigFile() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
 
         val result = runner(
             taskName,
@@ -80,7 +90,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkExtensionConnectorParamsDirect() {
         writeConsumerProject()
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
 
         val result = runner(
             taskName,
@@ -95,7 +108,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkExtensionConnectorParamsByConfigFileInPath() {
         writeConsumerProjectWithConfigInPath()
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
 
         val result = runner(
             taskName,
@@ -110,7 +126,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkExtensionConnectorParamsByConfigFile() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
 
         val result = runner(
             taskName,
@@ -126,15 +145,15 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     override fun checkEmptyExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
 
-        val result = runner(taskName).build()
+        val result = runner(taskName).buildAndFail()
 
-        assertTrue(result.output.contains("No src checksum differences found"))
+        assertTrue(result.output.contains(EmptySrcRequestException.MSG))
     }
 
     @Test
     override fun checkScriptsExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(scripts = listOf("testScript1", "testScript2"))
 
         val result = runner(
             taskName,
@@ -147,7 +166,7 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkModulesExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(modules = listOf("testModule1", "testModule2"))
 
         val result = runner(
             taskName,
@@ -160,7 +179,7 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkAllModulesExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(modules = listOf("testModule1"))
 
         val result = runner(
             taskName,
@@ -173,7 +192,7 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkAllScriptsExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(scripts = listOf("testScript1"))
 
         val result = runner(
             taskName,
@@ -186,7 +205,7 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkAllAdvImportsExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(advImports = listOf("testImport1"))
 
         val result = runner(
             taskName,
@@ -199,7 +218,10 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
     @Test
     override fun checkFullExecution() {
         writeConsumerProjectWithInstallationOnlyConfig()
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1", "testScript2"),
+            modules = listOf("testModule1", "testModule2")
+        )
 
         val result = runner(
             taskName,

@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.cli.commands
 
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.cli.CommandFunctionalTestBase
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -17,7 +18,10 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
 
     @Test
     override fun checkCliConnectorParamsDirect() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
         val result = runCommand(
             commandName,
             CommandArgs.SCRIPTS.withValue("testScript1"),
@@ -29,7 +33,10 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
 
     @Test
     override fun checkCliConnectorParamsByConfigFileInPath() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
         val result = runCommand(
             commandName,
             CommandArgs.SCRIPTS.withValue("testScript1"),
@@ -41,7 +48,10 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
 
     @Test
     override fun checkCliConnectorParamsByConfigFile() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1"),
+            modules = listOf("testModule1")
+        )
         val result = runCommand(
             commandName,
             CommandArgs.SCRIPTS.withValue("testScript1"),
@@ -54,12 +64,13 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
     @Test
     override fun checkEmptyExecution() {
         val result = runCommand(commandName, *connectorArgsByConfigFile())
-        assertEquals(0, result.exitCode)
+        assertEquals(1, result.exitCode)
+        assertTrue(result.stderr.contains(EmptySrcRequestException.MSG))
     }
 
     @Test
     override fun checkScriptsExecution() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(scripts = listOf("testScript1", "testScript2"))
         val result = runCommand(
             commandName,
             CommandArgs.SCRIPTS.withValue("testScript1,testScript2"),
@@ -70,7 +81,7 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
 
     @Test
     override fun checkModulesExecution() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(modules = listOf("testModule1", "testModule2"))
         val result = runCommand(
             commandName,
             CommandArgs.MODULES.withValue("testModule1,testModule2"),
@@ -81,7 +92,10 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
 
     @Test
     override fun checkFullExecution() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(
+            scripts = listOf("testScript1", "testScript2"),
+            modules = listOf("testModule1", "testModule2")
+        )
         val result = runCommand(
             commandName,
             CommandArgs.SCRIPTS.withValue("testScript1,testScript2"),
@@ -93,7 +107,7 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
 
     @Test
     override fun checkAllModulesExecution() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(modules = listOf("testModule1"))
         val result = runCommand(
             commandName,
             CommandArgs.ALL_MODULES.withValue("true"),
@@ -104,7 +118,7 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
 
     @Test
     override fun checkAllScriptsExecution() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(scripts = listOf("testScript1"))
         val result = runCommand(
             commandName,
             CommandArgs.ALL_SCRIPTS.withValue("true"),
@@ -115,7 +129,7 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
 
     @Test
     override fun checkAllAdvImportsExecution() {
-        writeLocalInfoFile()
+        createSyncCheckFixture(advImports = listOf("testImport1"))
         val result = runCommand(
             commandName,
             CommandArgs.ALL_ADV_IMPORTS.withValue("true"),

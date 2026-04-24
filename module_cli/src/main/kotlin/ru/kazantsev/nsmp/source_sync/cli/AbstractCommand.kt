@@ -1,6 +1,5 @@
 package ru.kazantsev.nsmp.source_sync.cli
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.cli.ArgType
 import kotlinx.cli.ExperimentalCli
 import kotlinx.cli.Subcommand
@@ -8,7 +7,7 @@ import kotlinx.cli.default
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
 
 @OptIn(ExperimentalCli::class)
 abstract class AbstractCommand(
@@ -149,6 +148,7 @@ abstract class AbstractCommand(
         get() = parseBooleanOption("ignoreSsl", ignoreSslRaw)
 
     protected fun createConnectorParams(): ConnectorParams {
+        validateConnectorOptions()
         return if (installationId.isNotEmpty() && configPath.isNotEmpty()) {
             ConnectorParams.byConfigFileInPath(installationId, configPath)
         } else if (installationId.isNotEmpty() && scheme.isNotEmpty() && host.isNotEmpty() && accessKey.isNotEmpty()) {
@@ -187,6 +187,36 @@ abstract class AbstractCommand(
             "true" -> true
             "false" -> false
             else -> throw IllegalArgumentException("Option --$name must be 'true' or 'false', but was '$value'")
+        }
+    }
+
+    private fun validateConnectorOptions() {
+        val hasInstallationId = installationId.isNotEmpty()
+        val hasConfigPath = configPath.isNotEmpty()
+        val hasDirectOptions = scheme.isNotEmpty() || host.isNotEmpty() || accessKey.isNotEmpty() || ignoreSslRaw != "false"
+        val hasAnyConnectorOverride = hasConfigPath || hasDirectOptions
+
+        if (!hasInstallationId && hasAnyConnectorOverride) {
+            throw IllegalArgumentException("Option --installationId is required when connector options are provided explicitly")
+        }
+
+        if (hasConfigPath && hasDirectOptions) {
+            throw IllegalArgumentException(
+                "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
+            )
+        }
+
+        if (hasDirectOptions) {
+            val missingOptions = buildList {
+                if (scheme.isEmpty()) add("--scheme")
+                if (host.isEmpty()) add("--host")
+                if (accessKey.isEmpty()) add("--accessKey")
+            }
+            if (missingOptions.isNotEmpty()) {
+                throw IllegalArgumentException(
+                    "Direct connector mode requires ${missingOptions.joinToString()}"
+                )
+            }
         }
     }
 }

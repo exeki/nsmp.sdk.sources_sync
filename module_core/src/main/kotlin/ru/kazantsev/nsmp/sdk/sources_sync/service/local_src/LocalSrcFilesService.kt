@@ -4,11 +4,11 @@ import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcFolder
 
 class LocalSrcFilesService(srcFoldersParams: SrcFoldersParams) {
@@ -30,7 +30,7 @@ class LocalSrcFilesService(srcFoldersParams: SrcFoldersParams) {
         type = SrcType.ADV_IMPORT
     )
 
-    fun findLocalFiles(req: SrcRequest): SrcLookupResultRoot<LocalFile> {
+    fun lookupLocalFiles(req: SrcRequest): SrcLookupResultRoot<LocalFile> {
         log.debug("Find local files started: {}", req)
         val result = SrcLookupResultRoot(
             scripts = scriptsSrcFolder.findSourceFiles(req.getScriptsRequest()),
@@ -61,8 +61,8 @@ class LocalSrcFilesService(srcFoldersParams: SrcFoldersParams) {
         )
         val result = src.convert(
             scriptTransform = { srcText -> scriptsSrcFolder.writeSourceFile(srcText) },
-            moduleTransform = { srcText -> scriptsSrcFolder.writeSourceFile(srcText) },
-            advImportTransform = { srcText -> scriptsSrcFolder.writeSourceFile(srcText) }
+            moduleTransform = { srcText -> modulesSrcFolder.writeSourceFile(srcText) },
+            advImportTransform = { srcText -> advImportsSrcFolder.writeSourceFile(srcText) }
         )
         log.debug(
             "Write local files completed: scripts={}, modules={}, advImports={}",

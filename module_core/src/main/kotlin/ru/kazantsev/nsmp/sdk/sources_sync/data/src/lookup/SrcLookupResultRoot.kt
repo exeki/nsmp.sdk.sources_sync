@@ -1,9 +1,9 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup
 
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCode
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.root.IRoot
 
 class SrcLookupResultRoot<T : ISrcCode>(
@@ -52,23 +52,18 @@ class SrcLookupResultRoot<T : ISrcCode>(
         advImports = convertSrcLookupResult(this.advImports, convertor)
     )
 
-    fun <K : ISrcCode> convertToSrcSetRoot(convertor: (T) -> K): SrcSetRoot<K> = convertToSrcSetRoot(
-        scriptConvertor = convertor,
-        moduleConvertor = convertor,
-        advImportConvertor = convertor
-    )
-
     fun <K : ISrcCode> convertToSrcSetRoot(
-        scriptConvertor: (T) -> K,
-        moduleConvertor: (T) -> K,
-        advImportConvertor: (T) -> K
+        scriptTransform: (T) -> K,
+        moduleTransform: (T) -> K,
+        advImportTransform: (T) -> K
     ): SrcSetRoot<K> = SrcSetRoot(
-        scripts = this.scripts.found.map(scriptConvertor).toSet(),
-        modules = this.modules.found.map(moduleConvertor).toSet(),
-        advImports = this.advImports.found.map(advImportConvertor).toSet()
+        scripts = this.scripts.found.map(scriptTransform).toSet(),
+        modules = this.modules.found.map(moduleTransform).toSet(),
+        advImports = this.advImports.found.map(advImportTransform).toSet()
     )
 
     companion object {
+        @Suppress("unused")
         fun <T : ISrcCode> empty(): SrcLookupResultRoot<T> {
             return SrcLookupResultRoot(
                 scripts = SrcLookupResult.empty(SrcType.SCRIPT),

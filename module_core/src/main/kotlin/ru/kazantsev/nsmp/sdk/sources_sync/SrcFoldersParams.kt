@@ -1,7 +1,6 @@
 package ru.kazantsev.nsmp.sdk.sources_sync
 
 import java.nio.file.Path
-import java.nio.file.Paths
 
 class SrcFoldersParams(
     private val projectAbsolutePath: String,

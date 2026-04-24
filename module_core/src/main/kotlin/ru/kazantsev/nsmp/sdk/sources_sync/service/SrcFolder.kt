@@ -1,15 +1,14 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service
 
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFormat
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
 import java.io.File
 import java.nio.file.Path
 import java.time.LocalDateTime
@@ -57,51 +56,77 @@ class SrcFolder(
         packageDirectory.toFile().mkdirs()
         val sourceFile = packageDirectory.resolve("${src.info.code}.${type.format.code}")
         val file = sourceFile.toFile()
+        file.parentFile.mkdirs()
         file.writeText(src.text)
         log.debug("Source file written: file={}", sourceFile)
         return LocalFileInfo(file = file, info = getInfo(src.info), code = src.info.code)
     }
 
     /**
-     * Найти файлы исходников по кодам в source set (независимо от вложенности по папкам).
-     * @param includedCodes список кодов исходников
-     */
-    fun findSourceFiles(req: SrcSetRequest): SrcLookupResult<LocalFile> {
-        val includedCodes = req.includedCodes.filter { it !in req.excludedCodes }
-        log.debug("Find source files started: path={}, requested={}", absolutePath, includedCodes.size)
-        val allFiles = absolutePath.toFile().walkTopDown().filter { it.isFile }.toList()
-        val notFound = mutableSetOf<String>()
-        val duplicated = mutableSetOf<String>()
-        val found = mutableSetOf<LocalFile>()
-        includedCodes.forEach { srcCode ->
-            val matches = allFiles.filter {
-                val excl = req.excludedCodes.contains(it.nameWithoutExtension)
-                val incl = req.all || req.includedCodes.contains(it.nameWithoutExtension)
-                !excl && incl
-            }
-            when (matches.size) {
-                0 -> notFound.add(srcCode)
-                1 -> found.add(LocalFile(code = srcCode, file = file))
-                else -> duplicated.add(srcCode)
-            }
-        }
-        log.debug(
-            "Find source files completed: found={}, notFound={}, duplicated={}",
-            found.size,
-            notFound.size,
-            duplicated.size
-        )
-        return SrcLookupResult(
-            found = found,
-            notFound = notFound,
-            duplicated = duplicated,
-            type = type
-        )
-    }
-
-    /**
      * Получить все файлы исходников из папки.
      */
+    fun findSourceFiles(req: SrcSetRequest): SrcLookupResult<LocalFile> {
+        val requestedCodes = req.includedCodes.filter { it !in req.excludedCodes }.toSet()
+        log.debug(
+            "Find source files fixed started: path={}, requested={}, all={}",
+            absolutePath,
+            requestedCodes.size,
+            req.all
+        )
+
+        if (!file.exists()) {
+            log.debug("Find source files fixed completed: source path does not exist")
+            return SrcLookupResult.empty(type)
+        }
+
+        val allFiles = file.walkTopDown().filter { it.isFile }.toList()
+        val eligibleFiles = allFiles.filter { candidate ->
+            candidate.nameWithoutExtension !in req.excludedCodes
+        }
+        val result: SrcLookupResult<LocalFile>
+
+        if (req.all) result = SrcLookupResult(
+            notFound = emptySet(),
+            duplicated = emptySet(),
+            type = type,
+            found = eligibleFiles.map { matchedFile ->
+                LocalFile(
+                    code = matchedFile.nameWithoutExtension,
+                    file = matchedFile
+                )
+            }.toSet()
+        )
+        else {
+            val notFound = mutableSetOf<String>()
+            val duplicated = mutableSetOf<String>()
+            val found = mutableSetOf<LocalFile>()
+            requestedCodes.forEach { srcCode ->
+                val matches = eligibleFiles.filter { matchedFile ->
+                    matchedFile.nameWithoutExtension == srcCode
+                }
+                when (matches.size) {
+                    0 -> notFound.add(srcCode)
+                    1 -> found.add(LocalFile(code = srcCode, file = matches.single()))
+                    else -> duplicated.add(srcCode)
+                }
+            }
+            result = SrcLookupResult(
+                found = found,
+                notFound = notFound,
+                duplicated = duplicated,
+                type = type
+            )
+        }
+        log.debug(
+            "Find source files fixed completed: found={}, notFound={}, duplicated={}",
+            result.found.size,
+            result.notFound.size,
+            result.duplicated.size
+        )
+        return result
+    }
+
+    @Suppress("unused")
     fun getAllSourceFiles(): SrcLookupResult<LocalFile> {
         return findSourceFiles(SrcSetRequest(all = true, type = type))
     }

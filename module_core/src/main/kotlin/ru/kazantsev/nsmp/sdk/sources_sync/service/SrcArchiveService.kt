@@ -2,13 +2,13 @@ package ru.kazantsev.nsmp.sdk.sources_sync.service
 
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ILocalFile
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalFile
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFormat
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfoFileRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSet
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.InfoFileNotFound
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.ScriptTextNotFound
 import java.io.ByteArrayInputStream

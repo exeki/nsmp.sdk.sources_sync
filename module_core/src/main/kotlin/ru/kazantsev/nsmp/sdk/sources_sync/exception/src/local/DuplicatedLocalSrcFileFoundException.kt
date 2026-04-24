@@ -1,20 +1,19 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.signature.LookupThrowableIfNecessary
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SetRoot
 
 class DuplicatedLocalSrcFileFoundException(lookupResult: SrcLookupResultRoot<*>) : LocalSrcException(getMessage(lookupResult)) {
 
+    @Suppress("unused")
     val duplicatedSrcCodes = SetRoot(
-        scripts = lookupResult.scripts.notFound,
-        modules = lookupResult.modules.notFound,
-        advImports = lookupResult.advImports.notFound,
+        scripts = lookupResult.scripts.duplicated,
+        modules = lookupResult.modules.duplicated,
+        advImports = lookupResult.advImports.duplicated,
     )
 
-    companion object : LookupThrowableIfNecessary {
-        override fun throwIfNecessary(lookupResult : SrcLookupResultRoot<*>)  {
+    companion object  {
+         fun throwIfNecessary(lookupResult : SrcLookupResultRoot<*>)  {
             if(lookupResult.hasDuplicates()) throw DuplicatedLocalSrcFileFoundException(lookupResult)
         }
 

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach
 import ru.kazantsev.nsmp.sdk.cli.commands.CommandArgs
 import ru.kazantsev.nsmp.sdk.runCli
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
@@ -83,7 +84,7 @@ abstract class CommandFunctionalTestBase {
     )
 
     protected fun assertPulledScriptExists(code: String) {
-        val scriptsRoot = testProjectDir.resolve("src/main/scripts")
+        val scriptsRoot = testProjectDir.resolve(SrcFoldersParams.getDefaultRelativeScriptsPathString())
         val found = Files.walk(scriptsRoot).use { pathStream ->
             pathStream.anyMatch { path ->
                 Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy"
@@ -93,7 +94,7 @@ abstract class CommandFunctionalTestBase {
     }
 
     protected fun assertPulledModuleExists(code: String) {
-        val modulesRoot = testProjectDir.resolve("src/main/modules")
+        val modulesRoot = testProjectDir.resolve(SrcFoldersParams.getDefaultModulesRelativePathString())
         val found = Files.walk(modulesRoot).use { pathStream ->
             pathStream.anyMatch { path ->
                 Files.isRegularFile(path) && path.fileName.toString() == "$code.groovy"
@@ -104,16 +105,19 @@ abstract class CommandFunctionalTestBase {
 
     protected fun assertPulledAdvImportExists(code: String) {
         val advImportsRoot = testProjectDir.resolve(SrcFoldersParams.getDefaultAdvImportsRelativePathString())
+        val advImportExtension = SrcType.ADV_IMPORT.format.code
         val found = Files.walk(advImportsRoot).use { pathStream ->
             pathStream.anyMatch { path ->
-                Files.isRegularFile(path) && path.fileName.toString() == "$code.xml"
+                Files.isRegularFile(path) && path.fileName.toString() == "$code.$advImportExtension"
             }
         }
         kotlin.test.assertTrue(found, "Expected adv import file for code=$code in $advImportsRoot")
     }
 
     protected fun createLocalScript(code: String) {
-        val scriptPath = testProjectDir.resolve("src/main/scripts/ru/kazantsev/demo/$code.groovy")
+        val scriptPath = testProjectDir
+            .resolve(SrcFoldersParams.getDefaultRelativeScriptsPathString())
+            .resolve("ru/kazantsev/demo/$code.groovy")
         Files.createDirectories(scriptPath.parent)
         Files.writeString(
             scriptPath,
@@ -126,7 +130,9 @@ abstract class CommandFunctionalTestBase {
     }
 
     protected fun createLocalModule(code: String) {
-        val modulePath = testProjectDir.resolve("src/main/modules/ru/kazantsev/demo/$code.groovy")
+        val modulePath = testProjectDir
+            .resolve(SrcFoldersParams.getDefaultModulesRelativePathString())
+            .resolve("ru/kazantsev/demo/$code.groovy")
         Files.createDirectories(modulePath.parent)
         Files.writeString(
             modulePath,
@@ -139,7 +145,9 @@ abstract class CommandFunctionalTestBase {
     }
 
     protected fun createLocalAdvImport(code: String) {
-        val advImportPath = testProjectDir.resolve("src/main/resources/advImports/$code.xml")
+        val advImportExtension = SrcType.ADV_IMPORT.format.code
+        val advImportPath =
+            testProjectDir.resolve("${SrcFoldersParams.getDefaultAdvImportsRelativePathString()}/$code.$advImportExtension")
         Files.createDirectories(advImportPath.parent)
         Files.writeString(
             advImportPath,
@@ -147,6 +155,20 @@ abstract class CommandFunctionalTestBase {
             <import code="$code"/>
             """.trimIndent()
         )
+    }
+
+    protected fun createSyncCheckFixture(
+        scripts: List<String> = emptyList(),
+        modules: List<String> = emptyList(),
+        advImports: List<String> = emptyList(),
+        withInfoFile: Boolean = true
+    ) {
+        scripts.forEach(::createLocalScript)
+        modules.forEach(::createLocalModule)
+        advImports.forEach(::createLocalAdvImport)
+        if (withInfoFile) {
+            writeLocalInfoFile()
+        }
     }
 
     protected fun writeLocalInfoFile() {

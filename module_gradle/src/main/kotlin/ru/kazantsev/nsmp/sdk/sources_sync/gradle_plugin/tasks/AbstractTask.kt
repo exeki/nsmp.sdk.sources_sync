@@ -1,6 +1,5 @@
 ﻿package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
@@ -11,7 +10,7 @@ import org.gradle.api.tasks.options.Option
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
 
 abstract class AbstractTask : DefaultTask() {
 
@@ -97,6 +96,7 @@ abstract class AbstractTask : DefaultTask() {
     abstract val advImportsExcluded: Property<String>
 
     protected fun createConnectorParams(): ConnectorParams {
+        validateConnectorOptions()
         return if (installationId.isPresent && configurationPath.isPresent) {
             ConnectorParams.byConfigFileInPath(installationId.get(), configurationPath.get())
         } else if (installationId.isPresent && scheme.isPresent && host.isPresent && accessKey.isPresent) {
@@ -126,6 +126,7 @@ abstract class AbstractTask : DefaultTask() {
     }
 
     protected fun resolveConnectorParams(): ConnectorParams {
+        validateConnectorOptions()
         return if (installationId.isPresent) createConnectorParams()
         else connectorParamsProvider?.orNull
             ?: throw IllegalStateException("SMP connection parameters are not configured")
@@ -165,5 +166,35 @@ abstract class AbstractTask : DefaultTask() {
 
     init {
         group = "nsmp_sdk_sources_sync"
+    }
+
+    private fun validateConnectorOptions() {
+        val hasInstallationId = installationId.isPresent
+        val hasConfigPath = configurationPath.isPresent
+        val hasDirectOptions = scheme.isPresent || host.isPresent || accessKey.isPresent || ignoreSsl.isPresent
+        val hasAnyConnectorOverride = hasConfigPath || hasDirectOptions
+
+        if (!hasInstallationId && hasAnyConnectorOverride) {
+            throw IllegalArgumentException("Option --installationId is required when connector options are provided explicitly")
+        }
+
+        if (hasConfigPath && hasDirectOptions) {
+            throw IllegalArgumentException(
+                "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
+            )
+        }
+
+        if (hasDirectOptions) {
+            val missingOptions = buildList {
+                if (!scheme.isPresent) add("--scheme")
+                if (!host.isPresent) add("--host")
+                if (!accessKey.isPresent) add("--accessKey")
+            }
+            if (missingOptions.isNotEmpty()) {
+                throw IllegalArgumentException(
+                    "Direct connector mode requires ${missingOptions.joinToString()}"
+                )
+            }
+        }
     }
 }

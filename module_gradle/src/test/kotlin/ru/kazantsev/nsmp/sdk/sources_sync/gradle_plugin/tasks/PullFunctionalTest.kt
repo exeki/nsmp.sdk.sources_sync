@@ -2,6 +2,8 @@ package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.PluginFunctionalTestBase
 import java.nio.file.Files
 
@@ -126,7 +128,7 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
         val result = runner(taskName).buildAndFail()
 
-        assertTrue(result.output.contains("No remote source files found"))
+        assertTrue(result.output.contains(EmptySrcRequestException.MSG))
     }
 
     @Test
@@ -231,7 +233,7 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         ).build()
 
         assertPulledScriptExists("testScript1")
-        val scriptsRoot = testProjectDir.resolve("src/main/scripts")
+        val scriptsRoot = testProjectDir.resolve(SrcFoldersParams.getDefaultRelativeScriptsPathString())
         val foundExcluded = Files.walk(scriptsRoot).use { pathStream ->
             pathStream.anyMatch { path ->
                 Files.isRegularFile(path) && path.fileName.toString() == "testScript2.groovy"

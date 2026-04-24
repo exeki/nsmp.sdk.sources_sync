@@ -5,6 +5,7 @@ package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeEach
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.TaskArgs
 import java.nio.file.Files
 import java.nio.file.Path
@@ -149,8 +150,11 @@ abstract class PluginFunctionalTestBase {
 
     protected fun assertPulledAdvImportExists(code: String) {
         val resourcesRoot = testProjectDir.resolve(SrcFoldersParams.getDefaultAdvImportsRelativePathString())
+        val advImportExtension = SrcType.ADV_IMPORT.format.code
         val found = Files.walk(resourcesRoot).use { pathStream ->
-            pathStream.anyMatch { path -> Files.isRegularFile(path) && path.fileName.toString() == "$code.xml" }
+            pathStream.anyMatch { path ->
+                Files.isRegularFile(path) && path.fileName.toString() == "$code.$advImportExtension"
+            }
         }
         assertTrue(found, "Expected adv import file for code=$code in $resourcesRoot")
     }
@@ -186,8 +190,9 @@ abstract class PluginFunctionalTestBase {
     }
 
     protected fun createLocalAdvImport(code: String) {
+        val advImportExtension = SrcType.ADV_IMPORT.format.code
         val advImportPath =
-            testProjectDir.resolve(SrcFoldersParams.getDefaultAdvImportsRelativePathString()).resolve("$code.xml")
+            testProjectDir.resolve(SrcFoldersParams.getDefaultAdvImportsRelativePathString()).resolve("$code.$advImportExtension")
         Files.createDirectories(advImportPath.parent)
         Files.writeString(
             advImportPath,
@@ -195,6 +200,20 @@ abstract class PluginFunctionalTestBase {
             <import code="$code"/>
             """.trimIndent()
         )
+    }
+
+    protected fun createSyncCheckFixture(
+        scripts: List<String> = emptyList(),
+        modules: List<String> = emptyList(),
+        advImports: List<String> = emptyList(),
+        withInfoFile: Boolean = true
+    ) {
+        scripts.forEach(::createLocalScript)
+        modules.forEach(::createLocalModule)
+        advImports.forEach(::createLocalAdvImport)
+        if (withInfoFile) {
+            writeLocalInfoFile()
+        }
     }
 
     private fun deleteRecursively(path: Path) {

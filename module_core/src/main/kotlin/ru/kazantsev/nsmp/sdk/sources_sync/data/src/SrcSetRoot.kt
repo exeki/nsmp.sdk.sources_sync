@@ -1,10 +1,8 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.data.src.set
+package ru.kazantsev.nsmp.sdk.sources_sync.data.src
 
-import kotlinx.serialization.Serializable
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.root.ISrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCode
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
 
 open class SrcSetRoot<T : ISrcCode>(
     scripts: Set<T>,
@@ -44,8 +42,8 @@ open class SrcSetRoot<T : ISrcCode>(
         advImportTransform: (T) -> K
     ): SrcSetRoot<K> = SrcSetRoot(
         scripts = this.scripts.convert(scriptTransform),
-        modules = this.scripts.convert(moduleTransform),
-        advImports = this.scripts.convert(advImportTransform)
+        modules = this.modules.convert(moduleTransform),
+        advImports = this.advImports.convert(advImportTransform)
     )
 
 

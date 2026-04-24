@@ -1,12 +1,9 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.exception.commands
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcSyncCheckPair
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.LocalSrcFilesNotFoundException
 
 class SyncCheckFailedException(
     val localSrcInfoRoot: SrcSetRoot<SrcSyncCheckPair<LocalFileInfo, RemoteInfo>>

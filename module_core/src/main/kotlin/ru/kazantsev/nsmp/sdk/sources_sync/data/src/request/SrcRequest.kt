@@ -1,4 +1,4 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.data.src.req
+package ru.kazantsev.nsmp.sdk.sources_sync.data.src.request
 
 import kotlinx.serialization.Serializable
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
@@ -42,5 +42,9 @@ class SrcRequest(
             all = allAdvImports
         )
     }
+
+    fun isEmpty(): Boolean = getScriptsRequest().isEmpty()
+            && getModulesRequest().isEmpty()
+            && getAdvImportsRequest().isEmpty()
 
 }

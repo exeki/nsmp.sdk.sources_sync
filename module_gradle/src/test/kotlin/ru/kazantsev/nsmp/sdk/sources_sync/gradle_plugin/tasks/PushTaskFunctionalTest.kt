@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.PluginFunctionalTestBase
 
 class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
@@ -135,7 +136,7 @@ class PushTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
 
         val result = runner(taskName).buildAndFail()
 
-        assertTrue(result.output.contains("No local sources found to push"))
+        assertTrue(result.output.contains(EmptySrcRequestException.MSG))
     }
 
     @Test

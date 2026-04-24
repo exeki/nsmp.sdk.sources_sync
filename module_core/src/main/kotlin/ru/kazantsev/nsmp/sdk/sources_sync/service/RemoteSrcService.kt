@@ -3,16 +3,18 @@ package ru.kazantsev.nsmp.sdk.sources_sync.service
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.basic_api_connector.dto.nsmp.ScriptChecksums
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ILocalFile
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCode
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalFile
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.req.SrcSetRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSet
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.set.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.NoRemoteSrcFilesException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.RemoteSrcFilesNotFoundException
 
 class RemoteSrcService(connectorParams: ConnectorParams) {
 
@@ -47,7 +49,7 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
     /**
      * Получить исходники с инсталляции
      */
-    fun getRemoteSrc(req: SrcRequest): SrcLookupResultRoot<RemoteSrcTextInfo> {
+    fun lookupRemoteSrc(req: SrcRequest): SrcLookupResultRoot<RemoteSrcTextInfo> {
         log.info("Remote src request started: {}", req)
         val srcArchive = connector.getSrc(req)
         val remoteSrc = srcArchiveService.unpackSrcArchive(srcArchive)
@@ -66,15 +68,30 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
     }
 
     /**
+     * Получить исходники с инсталляции, но с проверочками
+     */
+    fun getRemoteSrc(req: SrcRequest): SrcSetRoot<RemoteSrcTextInfo> {
+        val lookupResult = lookupRemoteSrc(req)
+        NoRemoteSrcFilesException.throwIfNecessary(lookupResult)
+        RemoteSrcFilesNotFoundException.throwIfNecessary(lookupResult)
+        return lookupResult.convertToSrcSetRoot()
+    }
+
+    /**
      * Получает с сервера актуальную информацию о чексуммах исходников.
      */
-    fun getRemoteSrcInfo(req: SrcRequest): SrcLookupResultRoot<RemoteInfo> {
+    fun lookupRemoteSrcInfo(req: SrcRequest): SrcLookupResultRoot<RemoteInfo> {
         log.info("Remote src info request started: {}", req)
-        val remoteInfo = connector.getSrcInfo(req)
+        val remoteData = connector.getSrcInfo(req)
+        val remoteRoot = SrcSetRoot(
+            scripts = remoteData.scripts,
+            modules = remoteData.modules,
+            advImports = remoteData.advImports
+        )
         val lookupResult = SrcLookupResultRoot(
-            scripts = compareRemoteAndRequested(req.getScriptsRequest(), remoteInfo.scripts),
-            modules = compareRemoteAndRequested(req.getModulesRequest(), remoteInfo.modules),
-            advImports = compareRemoteAndRequested(req.getAdvImportsRequest(), remoteInfo.advImports),
+            scripts = compareRemoteAndRequested(req.getScriptsRequest(), remoteRoot.scripts),
+            modules = compareRemoteAndRequested(req.getModulesRequest(), remoteRoot.modules),
+            advImports = compareRemoteAndRequested(req.getAdvImportsRequest(), remoteRoot.advImports),
         )
         log.info(
             "Remote src info completed: scripts={}, modules={}, advImports={}",
@@ -83,6 +100,10 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
             lookupResult.advImports.found.size
         )
         return lookupResult
+    }
+
+    fun getRemoteSrcInfo(req: SrcRequest): SrcSetRoot<RemoteInfo> {
+        return lookupRemoteSrcInfo(req).convertToSrcSetRoot()
     }
 
     /**

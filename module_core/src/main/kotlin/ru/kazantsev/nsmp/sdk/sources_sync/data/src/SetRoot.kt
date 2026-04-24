@@ -1,6 +1,6 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.data.src.set
+package ru.kazantsev.nsmp.sdk.sources_sync.data.src
 
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.simple.ISrcCode
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.root.ISetRoot
 
 open class SetRoot<T : Any>(
