@@ -6,8 +6,10 @@ import ru.kazantsev.nsmp.sdk.sources_sync.Constants
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.storage.SrcInfoFile
 import java.nio.file.Path
 
@@ -44,21 +46,28 @@ class LocalSrcInfoService(private val projectPath: Path) {
         json = json
     )
 
+    private fun getSrcInfoFileByType(type: SrcType): SrcInfoFile {
+        return when (type) {
+            SrcType.SCRIPT -> scriptsSrcInfoFile
+            SrcType.MODULE -> modulesSrcInfoFile
+            SrcType.ADV_IMPORT -> advImportsSrcInfoFile
+        }
+    }
 
-
-
-
+    fun lookupLocalInfoSrcSet(req: SrcSetRequest): SrcLookupResult<LocalInfo> {
+        return getSrcInfoFileByType(req.type).lookupLocalInfoSrcSet(req)
+    }
 
     /**
      * Выполнить поиск по информации по исходникам
      * @param req запрос
      * @return результаты поиска
      */
-    fun lookupLocalSrcInfo(req: SrcRequest): SrcLookupResultRoot<LocalInfo> {
+    fun lookupLocalInfoSrcSetRoot(req: SrcRequest): SrcLookupResultRoot<LocalInfo> {
         val filtered = SrcLookupResultRoot(
-            scripts = scriptsSrcInfoFile.lookupLocalInfo(req.getScriptsRequest()),
-            modules = modulesSrcInfoFile.lookupLocalInfo(req.getModulesRequest()),
-            advImports = advImportsSrcInfoFile.lookupLocalInfo(req.getAdvImportsRequest()),
+            scripts = scriptsSrcInfoFile.lookupLocalInfoSrcSet(req.getScriptsRequest()),
+            modules = modulesSrcInfoFile.lookupLocalInfoSrcSet(req.getModulesRequest()),
+            advImports = advImportsSrcInfoFile.lookupLocalInfoSrcSet(req.getAdvImportsRequest()),
         )
         log.debug(
             "Scripts local info found: {}, notFound: {}, duplicated: {}",
@@ -79,15 +88,6 @@ class LocalSrcInfoService(private val projectPath: Path) {
             filtered.advImports.duplicated.size
         )
         return filtered
-    }
-
-    /**
-     * Получить информацию по исходникам
-     * @param req запрос
-     * @return набор сетов
-     */
-    fun getLocalSrcInfo(req: SrcRequest): SrcSetRoot<LocalInfo> {
-        return lookupLocalSrcInfo(req).convertToSrcSetRoot()
     }
 
     /**

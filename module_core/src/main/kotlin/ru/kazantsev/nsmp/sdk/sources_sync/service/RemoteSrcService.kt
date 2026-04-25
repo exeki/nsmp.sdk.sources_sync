@@ -3,27 +3,28 @@ package ru.kazantsev.nsmp.sdk.sources_sync.service
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.basic_api_connector.dto.nsmp.ScriptChecksums
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalFile
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalFile
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteTextInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.lookup.EmptyRemoteSrcFileLookupResultRootException
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.lookup.NotFoundRemoteSrcFileLookupResultRootException
+import ru.kazantsev.nsmp.sdk.sources_sync.service.utils.SrcArchiveService
+import ru.kazantsev.nsmp.sdk.sources_sync.service.utils.SrcSyncConnector
 
 class RemoteSrcService(connectorParams: ConnectorParams) {
 
-    val srcArchiveService = SrcArchiveService()
-    val connector = SrcSyncConnector(connectorParams)
+    private val srcArchiveService = SrcArchiveService()
+    private val connector = SrcSyncConnector(connectorParams)
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private fun <T : ISrcCode> compareRemoteAndRequested(
+    private fun <T : ISrcCode> buildSrcLookupResult(
         request: SrcSetRequest,
         remote: SrcSet<T>
     ): SrcLookupResult<T> {
@@ -38,7 +39,8 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
                 .toSet()
         )
         log.debug(
-            "Comparison of remote and requested result: found={}, notFound={}, duplicated={}",
+            "buildSrcLookupResult: type={} found={}, notFound={}, duplicated={}",
+            result.type.code,
             result.found.size,
             result.notFound.size,
             result.duplicated.size
@@ -48,15 +50,17 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
 
     /**
      * Получить исходники с инсталляции
+     * @param req запрос
+     * @return результат поиска исходников
      */
-    fun lookupRemoteSrc(req: SrcRequest): SrcLookupResultRoot<RemoteSrcTextInfo> {
+    fun lookupRemoteSrc(req: SrcRequest): SrcLookupResultRoot<RemoteTextInfo> {
         log.info("Remote src request started: {}", req)
         val srcArchive = connector.getSrc(req)
         val remoteSrc = srcArchiveService.unpackSrcArchive(srcArchive)
         val lookupResult = SrcLookupResultRoot(
-            scripts = compareRemoteAndRequested(req.getScriptsRequest(), remoteSrc.scripts),
-            modules = compareRemoteAndRequested(req.getModulesRequest(), remoteSrc.modules),
-            advImports = compareRemoteAndRequested(req.getAdvImportsRequest(), remoteSrc.advImports)
+            scripts = buildSrcLookupResult(req.getScriptsRequest(), remoteSrc.scripts),
+            modules = buildSrcLookupResult(req.getModulesRequest(), remoteSrc.modules),
+            advImports = buildSrcLookupResult(req.getAdvImportsRequest(), remoteSrc.advImports)
         )
         log.info(
             "Fetch src completed: scripts={}, modules={}, advImports={}",
@@ -68,17 +72,9 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
     }
 
     /**
-     * Получить исходники с инсталляции, но с проверочками
-     */
-    fun getRemoteSrc(req: SrcRequest): SrcSetRoot<RemoteSrcTextInfo> {
-        val lookupResult = lookupRemoteSrc(req)
-        EmptyRemoteSrcFileLookupResultRootException.throwIfNecessary(lookupResult)
-        NotFoundRemoteSrcFileLookupResultRootException.throwIfNecessary(lookupResult)
-        return lookupResult.convertToSrcSetRoot()
-    }
-
-    /**
-     * Получает с сервера актуальную информацию о чексуммах исходников.
+     * Получает с сервера актуальную информацию о чексуммах исходников
+     * @param req запрос
+     * @return src set root с информацией о исходниках
      */
     fun lookupRemoteSrcInfo(req: SrcRequest): SrcLookupResultRoot<RemoteInfo> {
         log.info("Remote src info request started: {}", req)
@@ -88,35 +84,55 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
             modules = remoteData.modules,
             advImports = remoteData.advImports
         )
-        val lookupResult = SrcLookupResultRoot(
-            scripts = compareRemoteAndRequested(req.getScriptsRequest(), remoteRoot.scripts),
-            modules = compareRemoteAndRequested(req.getModulesRequest(), remoteRoot.modules),
-            advImports = compareRemoteAndRequested(req.getAdvImportsRequest(), remoteRoot.advImports),
+        val lookupResultRoot = SrcLookupResultRoot(
+            scripts = buildSrcLookupResult(req.getScriptsRequest(), remoteRoot.scripts),
+            modules = buildSrcLookupResult(req.getModulesRequest(), remoteRoot.modules),
+            advImports = buildSrcLookupResult(req.getAdvImportsRequest(), remoteRoot.advImports),
         )
         log.info(
             "Remote src info completed: scripts={}, modules={}, advImports={}",
-            lookupResult.scripts.found.size,
-            lookupResult.modules.found.size,
-            lookupResult.advImports.found.size
+            lookupResultRoot.scripts.found.size,
+            lookupResultRoot.modules.found.size,
+            lookupResultRoot.advImports.found.size
         )
-        return lookupResult
+        return lookupResultRoot
     }
 
+    /**
+     * Получить исходники с инсталляции, но с проверочками
+     * @param req запрос
+     * @return src set root с исходниками
+     * @throws NotFoundRemoteSrcFileLookupResultRootException если не все исходники найдены
+     */
+    @Throws(NotFoundRemoteSrcFileLookupResultRootException::class)
+    fun getRemoteSrc(req: SrcRequest): SrcSetRoot<RemoteTextInfo> {
+        val lookupResult = lookupRemoteSrc(req)
+        NotFoundRemoteSrcFileLookupResultRootException.throwIfNecessary(lookupResult)
+        return lookupResult.convertToSrcSetRoot()
+    }
+
+    /**
+     * Получить информацию по исходникам с сервера
+     * @param req запрос
+     * @return src set root с информацией об исходниках с сервера
+     */
     fun getRemoteSrcInfo(req: SrcRequest): SrcSetRoot<RemoteInfo> {
         return lookupRemoteSrcInfo(req).convertToSrcSetRoot()
     }
 
     /**
      * Отправить исходники на инсталляцию
+     * @param fileSrcSetRoot root с исходниками к отправке
+     * @return чексуммы загруженных исходников с сервера
      */
-    fun <T : ILocalFile> sendRemoteSrc(root: SrcSetRoot<T>): ScriptChecksums {
+    fun <T : ILocalFile> sendRemoteSrc(fileSrcSetRoot: SrcSetRoot<T>): ScriptChecksums {
         log.info(
             "Remote src upload started: scripts={}, modules={}, advImports={}",
-            root.scripts.size,
-            root.modules.size,
-            root.advImports.size
+            fileSrcSetRoot.scripts.size,
+            fileSrcSetRoot.modules.size,
+            fileSrcSetRoot.advImports.size
         )
-        val archive = srcArchiveService.buildSrcArchive(root)
+        val archive = srcArchiveService.buildSrcArchive(fileSrcSetRoot)
         val result = connector.pushScripts(archive)
         log.info(
             "Remote src upload completed: scripts={}, modules={}, advImports={}",

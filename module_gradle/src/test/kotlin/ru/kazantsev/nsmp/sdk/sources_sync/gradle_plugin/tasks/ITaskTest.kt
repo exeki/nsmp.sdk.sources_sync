@@ -76,4 +76,5 @@ interface ITaskTest {
      * Передать в запрос параметр allAdvImports - true
      */
     fun checkAllAdvImportsExecution()
+    fun checkAllExecutionWhenRequestIsNotEmptyButNoSourcesFound()
 }

@@ -1,10 +1,9 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup
 
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.root.IRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 
 class SrcLookupResultRoot<T : ISrcCode>(
     override val scripts: SrcLookupResult<T>,
@@ -15,12 +14,6 @@ class SrcLookupResultRoot<T : ISrcCode>(
     override fun isNotEmpty(): Boolean {
         return scripts.found.isNotEmpty() || modules.found.isNotEmpty() || advImports.found.isNotEmpty()
     }
-
-    fun convertToRequest(converter: (T) -> String): SrcRequest = SrcRequest(
-        scripts = this.scripts.found.map(converter).toSet(),
-        modules = this.modules.found.map(converter).toSet(),
-        advImports = this.advImports.found.map(converter).toSet()
-    )
 
     fun hasNotFound(): Boolean {
         return scripts.notFound.isNotEmpty() || modules.notFound.isNotEmpty() || advImports.notFound.isNotEmpty()

@@ -19,8 +19,8 @@ class DuplicatedLocalSrcFileLookupResultRootException(
     companion object : LookupResultRootExceptionCompanion() {
         const val MSG = "Some local src files duplicated:"
 
-        fun throwIfNecessary(srcLookupResultRoot: SrcLookupResultRoot<LocalFile>) {
-            if (srcLookupResultRoot.hasDuplicates()) throw DuplicatedLocalSrcFileLookupResultRootException(srcLookupResultRoot)
+        fun throwIfNecessary(lookupResultRoot: SrcLookupResultRoot<LocalFile>) {
+            if (lookupResultRoot.hasDuplicates()) throw DuplicatedLocalSrcFileLookupResultRootException(lookupResultRoot)
         }
     }
 }

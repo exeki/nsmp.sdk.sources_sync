@@ -1,4 +1,4 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.service
+package ru.kazantsev.nsmp.sdk.sources_sync.service.utils
 
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
@@ -7,7 +7,7 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFormat
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfoFileRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteTextInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.InfoFileNotFound
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.RemoteSrcTextNotFound
@@ -33,7 +33,7 @@ class SrcArchiveService {
     /**
      * Распаковывает архив с исходниками в DTO с текстами и метаданными исходников.
      */
-    fun unpackSrcArchive(srcArchive: ByteArray): SrcSetRoot<RemoteSrcTextInfo> {
+    fun unpackSrcArchive(srcArchive: ByteArray): SrcSetRoot<RemoteTextInfo> {
         log.debug("Unpack archive started: size={} bytes", srcArchive.size)
         val scriptTexts = mutableMapOf<String, String>()
         val moduleTexts = mutableMapOf<String, String>()
@@ -78,19 +78,19 @@ class SrcArchiveService {
 
         val result = SrcSetRoot(
             scripts = srcInfo.scripts.map {
-                RemoteSrcTextInfo(
+                RemoteTextInfo(
                     info = it,
                     text = scriptTexts[it.code] ?: throw RemoteSrcTextNotFound(it.code, SrcType.SCRIPT)
                 )
             }.toSet(),
             modules = srcInfo.modules.map {
-                RemoteSrcTextInfo(
+                RemoteTextInfo(
                     info = it,
                     text = moduleTexts[it.code] ?: throw RemoteSrcTextNotFound(it.code, SrcType.MODULE)
                 )
             }.toSet(),
             advImports = srcInfo.advImports.map {
-                RemoteSrcTextInfo(
+                RemoteTextInfo(
                     info = it,
                     text = advImportTexts[it.code] ?: throw RemoteSrcTextNotFound(it.code, SrcType.ADV_IMPORT)
                 )

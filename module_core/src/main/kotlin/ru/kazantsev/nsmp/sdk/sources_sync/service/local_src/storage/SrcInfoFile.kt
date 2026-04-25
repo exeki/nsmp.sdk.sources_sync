@@ -66,7 +66,7 @@ class SrcInfoFile(
         return set
     }
 
-    fun lookupLocalInfo(req: SrcSetRequest): SrcLookupResult<LocalInfo> {
+    fun lookupLocalInfoSrcSet(req: SrcSetRequest): SrcLookupResult<LocalInfo> {
         val localSrcInfo = read()
         val result = if (req.all) SrcLookupResult(
             found = localSrcInfo.filter { !req.excludedCodes.contains(it.code) }.toSet(),
@@ -96,7 +96,7 @@ class SrcInfoFile(
 
     @Suppress("unused")
     fun getLocalInfo(req: SrcSetRequest): SrcSet<LocalInfo> {
-        val result = lookupLocalInfo(req)
+        val result = lookupLocalInfoSrcSet(req)
         return result.convertToSrcSet()
     }
 

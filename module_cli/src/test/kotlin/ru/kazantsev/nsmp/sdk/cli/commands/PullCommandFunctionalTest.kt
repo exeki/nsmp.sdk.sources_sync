@@ -5,6 +5,7 @@ import ru.kazantsev.nsmp.sdk.cli.CommandFunctionalTestBase
 import ru.kazantsev.nsmp.source_sync.cli.AbstractCommand
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.PullEmptySrcSetRootException
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -16,7 +17,7 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
     override fun checkExists() {
         val result = runCommand(commandName)
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains(AbstractCommand.INSTALLATION_ID_NOT_CONFIGURED_MSG))
+        assertTrue(result.stderr.contains(AbstractCommand.INSTALLATION_ID_REQUIRED_MSG))
     }
 
     @Test
@@ -135,6 +136,23 @@ class PullCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest {
         )
         assertEquals(0, result.exitCode)
         assertPulledAdvImportExists("testImport1")
+    }
+
+    @Test
+    override fun checkAllExecutionWhenRequestIsNotEmptyButNoSourcesFound() {
+        setUpTestProject()
+
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_MODULES.withValue("true"),
+            CommandArgs.MODULES_EXCLUDED.withValue(
+                "testModule5,testModule4,testModule3,keysWork,testModule2,testModule1,webApiComponents,sdkPlaceholder,sdkController,importTest"
+            ),
+            *connectorArgsByConfigFile()
+        )
+
+        assertEquals(1, result.exitCode)
+        assertTrue(result.stderr.contains(PullEmptySrcSetRootException.MSG))
     }
 
     @Test

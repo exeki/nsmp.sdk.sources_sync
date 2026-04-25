@@ -3,6 +3,7 @@ package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.SyncCheckEmptySrcSetRootException
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.PluginFunctionalTestBase
 
 class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
@@ -213,6 +214,19 @@ class SyncCheckTaskTaskFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         ).build()
 
         assertTrue(result.output.contains("Changed adv import: testImport1"))
+    }
+
+    @Test
+    override fun checkAllExecutionWhenRequestIsNotEmptyButNoSourcesFound() {
+        setUpTestProject()
+        writeConsumerProjectWithInstallationOnlyConfig()
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_MODULES.withValue("true")
+        ).buildAndFail()
+
+        assertTrue(result.output.contains(SyncCheckEmptySrcSetRootException.MSG))
     }
 
     @Test

@@ -5,14 +5,14 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcSyncCheckPair
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
 
-class SyncCheckFailedException(
+class PushSyncCheckFailedException(
     @Suppress("CanBeParameter", "RedundantSuppression")
     val localSrcInfoRoot: SrcSetRoot<SrcSyncCheckPair<LocalFileInfo, RemoteInfo>>
 ) : CommandException(getMessage(localSrcInfoRoot)) {
     companion object {
 
         fun throwIfNecessary(localSrcInfoRoot: SrcSetRoot<SrcSyncCheckPair<LocalFileInfo, RemoteInfo>>) {
-            if (localSrcInfoRoot.any { it.conflict }) throw SyncCheckFailedException(localSrcInfoRoot)
+            if (localSrcInfoRoot.any { it.conflict }) throw PushSyncCheckFailedException(localSrcInfoRoot)
         }
 
         private fun getMessage(localSrcInfoRoot: SrcSetRoot<SrcSyncCheckPair<LocalFileInfo, RemoteInfo>>): String {

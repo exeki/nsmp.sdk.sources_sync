@@ -2,6 +2,7 @@ package ru.kazantsev.nsmp.sdk.sources_sync.data.src
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
 
 open class SrcSet<T : ISrcCode>(
     val map: Map<String, T>,
@@ -28,6 +29,13 @@ open class SrcSet<T : ISrcCode>(
 
     override fun <K : ISrcCode> convert(transform: (T) -> K): SrcSet<K> {
         return SrcSet(this.map(transform).toSet(), this.type)
+    }
+
+    override fun convertToRequest(): SrcSetRequest {
+        return SrcSetRequest(
+            type = this.type,
+            includedCodes = this.map.keys.toSet()
+        )
     }
 
     companion object {

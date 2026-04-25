@@ -20,8 +20,8 @@ class NotFoundLocalSrcFileLookupResultRootException(
 
         const val MSG = "Some local src files not found:"
 
-        fun throwIfNecessary(lookupResult: SrcLookupResultRoot<LocalFile>) {
-            if (lookupResult.hasNotFound()) throw NotFoundLocalSrcFileLookupResultRootException(lookupResult)
+        fun throwIfNecessary(lookupResultRoot: SrcLookupResultRoot<LocalFile>) {
+            if (lookupResultRoot.hasNotFound()) throw NotFoundLocalSrcFileLookupResultRootException(lookupResultRoot)
         }
     }
 }

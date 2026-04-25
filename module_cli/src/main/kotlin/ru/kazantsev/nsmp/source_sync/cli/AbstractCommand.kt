@@ -19,10 +19,8 @@ abstract class AbstractCommand(
         private const val SIMPLE_LOGGER_DEFAULT_LEVEL_PROPERTY = "org.slf4j.simpleLogger.defaultLogLevel"
         private val ALLOWED_LOG_LEVELS = setOf("trace", "debug", "info", "warn", "error")
         const val INSTALLATION_ID_NOT_CONFIGURED_MSG = "SMP installation identifier is not configured"
-        const val INSTALLATION_ID_REQUIRED_MSG =
-            "Option --installationId is required"
-        const val CONNECTOR_MODES_VALIDATION_MSG =
-            "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
+        const val INSTALLATION_ID_REQUIRED_MSG = "Option --installationId is required"
+        const val CONNECTOR_MODES_VALIDATION_MSG = "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
         const val DIRECT_CONNECTOR_MODE_REQUIRED_MSG = "Direct connector mode requires"
 
         fun configureSimpleLoggerLogLevel(args: Array<String>) {

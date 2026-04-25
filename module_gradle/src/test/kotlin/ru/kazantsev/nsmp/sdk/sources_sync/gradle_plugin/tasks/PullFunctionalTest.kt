@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.PullEmptySrcSetRootException
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.PluginFunctionalTestBase
 import java.nio.file.Files
 
@@ -192,6 +193,22 @@ class PullFunctionalTest : PluginFunctionalTestBase(), ITaskTest {
         ).build()
 
         assertPulledAdvImportExists("testImport1")
+    }
+
+    @Test
+    override fun checkAllExecutionWhenRequestIsNotEmptyButNoSourcesFound() {
+        setUpTestProject()
+        writeConsumerProjectWithInstallationOnlyConfig()
+
+        val result = runner(
+            taskName,
+            TaskArgs.ALL_MODULES.withValue("true"),
+            TaskArgs.MODULES_EXCLUDED.withValue(
+                "testModule5,testModule4,testModule3,keysWork,testModule2,testModule1,webApiComponents,sdkPlaceholder,sdkController,importTest"
+            )
+        ).buildAndFail()
+
+        assertTrue(result.output.contains(PullEmptySrcSetRootException.MSG))
     }
 
     @Test

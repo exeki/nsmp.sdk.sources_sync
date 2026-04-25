@@ -4,7 +4,7 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.LookupResultExceptionCompanion
 
-class DuplicatedLocalSrcFileLookupException(
+class DuplicatedLocalSrcFileLookupResultException(
     @Suppress("unused")
     val lookupResult: SrcLookupResult<LocalFile>
 ) : LocalSrcLookupException(
@@ -18,8 +18,8 @@ class DuplicatedLocalSrcFileLookupException(
     companion object : LookupResultExceptionCompanion(){
         const val MSG = "Some local src files duplicated:"
 
-        fun throwIfNecessary(srcLookupResult: SrcLookupResult<LocalFile>) {
-            if (srcLookupResult.duplicated.isNotEmpty()) throw DuplicatedLocalSrcFileLookupException(srcLookupResult)
+        fun throwIfNecessary(lookupResult: SrcLookupResult<LocalFile>) {
+            if (lookupResult.duplicated.isNotEmpty()) throw DuplicatedLocalSrcFileLookupResultException(lookupResult)
         }
     }
 }

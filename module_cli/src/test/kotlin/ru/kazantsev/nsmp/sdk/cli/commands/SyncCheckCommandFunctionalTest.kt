@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import ru.kazantsev.nsmp.sdk.cli.CommandFunctionalTestBase
 import ru.kazantsev.nsmp.source_sync.cli.AbstractCommand
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.SyncCheckEmptySrcSetRootException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -14,7 +15,7 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
     override fun checkExists() {
         val result = runCommand(commandName)
         assertEquals(1, result.exitCode)
-        assertTrue(result.stderr.contains(AbstractCommand.INSTALLATION_ID_NOT_CONFIGURED_MSG))
+        assertTrue(result.stderr.contains(AbstractCommand.INSTALLATION_ID_REQUIRED_MSG))
     }
 
     @Test
@@ -137,5 +138,19 @@ class SyncCheckCommandFunctionalTest : CommandFunctionalTestBase(), ICommandTest
             *connectorArgsByConfigFile()
         )
         assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    override fun checkAllExecutionWhenRequestIsNotEmptyButNoSourcesFound() {
+        setUpTestProject()
+
+        val result = runCommand(
+            commandName,
+            CommandArgs.ALL_MODULES.withValue("true"),
+            *connectorArgsByConfigFile()
+        )
+
+        assertEquals(1, result.exitCode)
+        assertTrue(result.stderr.contains(SyncCheckEmptySrcSetRootException.MSG))
     }
 }

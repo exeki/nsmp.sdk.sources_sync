@@ -14,4 +14,5 @@ interface ICommandTest {
     fun checkAllModulesExecution()
     fun checkAllScriptsExecution()
     fun checkAllAdvImportsExecution()
+    fun checkAllExecutionWhenRequestIsNotEmptyButNoSourcesFound()
 }

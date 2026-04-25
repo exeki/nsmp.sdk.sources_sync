@@ -5,7 +5,7 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.remote.IRemoteChecksum
 /**
  * Данные о полученном исходнике
  */
-class RemoteSrcTextInfo(
+class RemoteTextInfo(
     /**
      * Информация о полученном исходнике
      */

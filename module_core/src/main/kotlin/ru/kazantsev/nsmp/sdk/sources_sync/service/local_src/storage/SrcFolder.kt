@@ -1,19 +1,15 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.storage
 
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteTextInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.fs.SrcCodeValidationException
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.fs.SrcPathValidationException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.EmptyLocalSrcFileLookupResultException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultException
 import java.io.File
 import java.nio.file.Path
 import java.util.*
@@ -51,7 +47,7 @@ class SrcFolder(
      * Записать новый файл исходника.
      * @param src ДТО файла
      */
-    fun writeSourceFile(src: RemoteSrcTextInfo): LocalFileInfo {
+    fun writeSourceFile(src: RemoteTextInfo): LocalFileInfo {
         validateSourceCode(src.info.code)
         val packageDirectory = resolvePackageDirectory(src.text)
         packageDirectory.toFile().mkdirs()
@@ -135,16 +131,6 @@ class SrcFolder(
             result.duplicated.size
         )
         return result
-    }
-
-    @Suppress("unused")
-    fun getLocalFiles(req: SrcSetRequest): SrcSet<LocalFile> {
-        if (req.isEmpty()) return SrcSet.empty(type)
-        val srcLookupResult = lookupLocalFiles(req)
-        EmptyLocalSrcFileLookupResultException.throwIfNecessary(srcLookupResult)
-        NotFoundLocalSrcFileLookupResultException.throwIfNecessary(srcLookupResult)
-        DuplicatedLocalSrcFileLookupException.throwIfNecessary(srcLookupResult)
-        return srcLookupResult.convertToSrcSet()
     }
 
     /**
