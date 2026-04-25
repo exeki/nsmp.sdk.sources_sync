@@ -15,6 +15,7 @@ abstract class SyncCheckTask : AbstractTask() {
     @TaskAction
     fun action() {
         logger.lifecycle("Running syncCheck task")
+        logTaskOptionsSafely()
         val diff = createService().syncCheck(createRequest())
 
         if (diff.scripts.isEmpty() && diff.modules.isEmpty() && diff.advImports.isEmpty()) {

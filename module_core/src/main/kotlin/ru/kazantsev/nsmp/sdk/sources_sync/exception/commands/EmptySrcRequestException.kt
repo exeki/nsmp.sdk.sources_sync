@@ -2,8 +2,10 @@ package ru.kazantsev.nsmp.sdk.sources_sync.exception.commands
 
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
 
-@Suppress("unused")
-class EmptySrcRequestException(val srcRequest: SrcRequest) : CommandException("Empty src request") {
+class EmptySrcRequestException(
+    @Suppress("unused")
+    val srcRequest: SrcRequest
+) : CommandException("Empty src request") {
     companion object {
         fun throwIfNecessary(req: SrcRequest) {
             if (req.isEmpty()) throw EmptySrcRequestException(req)

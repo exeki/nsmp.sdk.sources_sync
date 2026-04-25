@@ -20,7 +20,7 @@ abstract class AbstractCommand(
         private val ALLOWED_LOG_LEVELS = setOf("trace", "debug", "info", "warn", "error")
         const val INSTALLATION_ID_NOT_CONFIGURED_MSG = "SMP installation identifier is not configured"
         const val INSTALLATION_ID_REQUIRED_MSG =
-            "Option --installationId is required when connector options are provided explicitly"
+            "Option --installationId is required"
         const val CONNECTOR_MODES_VALIDATION_MSG =
             "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
         const val DIRECT_CONNECTOR_MODE_REQUIRED_MSG = "Direct connector mode requires"
@@ -200,9 +200,8 @@ abstract class AbstractCommand(
         val hasInstallationId = installationId.isNotEmpty()
         val hasConfigPath = configPath.isNotEmpty()
         val hasDirectOptions = scheme.isNotEmpty() || host.isNotEmpty() || accessKey.isNotEmpty() || ignoreSslRaw != "false"
-        val hasAnyConnectorOverride = hasConfigPath || hasDirectOptions
 
-        if (!hasInstallationId && hasAnyConnectorOverride) {
+        if (!hasInstallationId) {
             throw IllegalArgumentException(INSTALLATION_ID_REQUIRED_MSG)
         }
 

@@ -19,6 +19,7 @@ abstract class AbstractTask : DefaultTask() {
         const val CONNECTOR_MODES_VALIDATION_MSG =
             "Connector options must use either config file mode (--installationId, --configPath) or direct mode (--installationId, --scheme, --host, --accessKey, optional --ignoreSsl)"
         const val DIRECT_CONNECTOR_MODE_REQUIRED_MSG = "Direct connector mode requires"
+        private val SENSITIVE_TASK_OPTIONS = setOf("accessKey")
     }
 
     @get:Internal
@@ -173,6 +174,39 @@ abstract class AbstractTask : DefaultTask() {
 
     init {
         group = "nsmp_sdk_sources_sync"
+    }
+
+    protected fun logTaskOptionsSafely(additionalOptions: Map<String, String?> = emptyMap()) {
+        if (!logger.isDebugEnabled) return
+        val options = linkedMapOf(
+            "installationId" to installationId.orNull,
+            "configPath" to configurationPath.orNull,
+            "scheme" to scheme.orNull,
+            "host" to host.orNull,
+            "accessKey" to accessKey.orNull,
+            "ignoreSsl" to ignoreSsl.orNull,
+            "scripts" to scripts.orNull,
+            "modules" to modules.orNull,
+            "advImports" to advImports.orNull,
+            "allModules" to allModules.orNull,
+            "allScripts" to allScripts.orNull,
+            "allAdvImports" to allAdvImports.orNull,
+            "modulesExcluded" to modulesExcluded.orNull,
+            "scriptsExcluded" to scriptsExcluded.orNull,
+            "advImportsExcluded" to advImportsExcluded.orNull,
+        )
+        options.putAll(additionalOptions)
+
+        val sanitized = options
+            .filterValues { it != null }
+            .map { (name, value) ->
+                val normalizedName = name.trim()
+                val safeValue = if (normalizedName in SENSITIVE_TASK_OPTIONS) "***" else value
+                "--$normalizedName=$safeValue"
+            }
+            .joinToString(" ")
+
+        logger.debug("Task options: {}", sanitized)
     }
 
     private fun validateConnectorOptions() {

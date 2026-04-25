@@ -7,14 +7,16 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.fs.SrcCodeValidationException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.fs.SrcPathValidationException
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupException
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.EmptyLocalSrcFileLookupResultException
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultException
 import java.io.File
 import java.nio.file.Path
+import java.util.*
 
 /**
  * Описывает один source set проекта и операции с ним.
@@ -37,12 +39,11 @@ class SrcFolder(
     companion object {
         private val PACKAGE_DECLARATION_REGEX =
             Regex("""(?m)^\s*package\s+([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\s*;?\s*$""")
-    }
-
-    private fun getInfo(remoteInfo: RemoteInfo): LocalInfo {
-        return LocalInfo(
-            checksum = remoteInfo.checksum,
-            code = remoteInfo.code
+        private val SOURCE_CODE_REGEX = Regex("^[A-Za-z0-9._-]{1,128}$")
+        private val WINDOWS_RESERVED_FILE_NAMES = setOf(
+            "CON", "PRN", "AUX", "NUL",
+            "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
         )
     }
 
@@ -51,14 +52,23 @@ class SrcFolder(
      * @param src ДТО файла
      */
     fun writeSourceFile(src: RemoteSrcTextInfo): LocalFileInfo {
+        validateSourceCode(src.info.code)
         val packageDirectory = resolvePackageDirectory(src.text)
         packageDirectory.toFile().mkdirs()
-        val sourceFile = packageDirectory.resolve("${src.info.code}.${type.format.code}")
+        val sourceFile = packageDirectory.resolve("${src.info.code}.${type.format.code}").normalize()
+        validateResolvedPath(sourceFile)
         val file = sourceFile.toFile()
         file.parentFile.mkdirs()
         file.writeText(src.text)
         log.debug("Source file written: file={}", sourceFile)
-        return LocalFileInfo(file = file, info = getInfo(src.info), code = src.info.code)
+        return LocalFileInfo(
+            file = file,
+            code = src.info.code,
+            info = LocalInfo(
+                checksum = src.info.checksum,
+                code = src.info.code
+            )
+        )
     }
 
     /**
@@ -129,7 +139,7 @@ class SrcFolder(
 
     @Suppress("unused")
     fun getLocalFiles(req: SrcSetRequest): SrcSet<LocalFile> {
-        if(req.isEmpty()) return SrcSet.empty(type)
+        if (req.isEmpty()) return SrcSet.empty(type)
         val srcLookupResult = lookupLocalFiles(req)
         EmptyLocalSrcFileLookupResultException.throwIfNecessary(srcLookupResult)
         NotFoundLocalSrcFileLookupResultException.throwIfNecessary(srcLookupResult)
@@ -145,5 +155,34 @@ class SrcFolder(
         if (!type.format.hasPackage) return absolutePath
         val packageName = PACKAGE_DECLARATION_REGEX.find(sourceText)?.groupValues?.get(1) ?: return absolutePath
         return absolutePath.resolve(packageName.replace('.', File.separatorChar))
+    }
+
+    private fun validateSourceCode(code: String) {
+        if (code.isBlank()) throw SrcCodeValidationException("Source code must not be blank")
+        if (!SOURCE_CODE_REGEX.matches(code)) {
+            throw SrcCodeValidationException("Source code contains forbidden characters: \"$code\"")
+        }
+        if (code.contains("..")) {
+            throw SrcCodeValidationException("Source code must not contain '..': \"$code\"")
+        }
+        if (code.contains('/') || code.contains('\\')) {
+            throw SrcCodeValidationException("Source code must not contain path separators: \"$code\"")
+        }
+        val fileNameHead = code.substringBefore('.').uppercase(Locale.ROOT)
+        if (fileNameHead in WINDOWS_RESERVED_FILE_NAMES) {
+            throw SrcCodeValidationException(
+                "Source code resolves to a reserved file name on Windows: \"$code\""
+            )
+        }
+    }
+
+    private fun validateResolvedPath(path: Path) {
+        val normalizedRoot = absolutePath.normalize()
+        val normalizedPath = path.normalize()
+        if (!normalizedPath.startsWith(normalizedRoot)) {
+            throw SrcPathValidationException(
+                "Resolved source path escapes source root: \"$normalizedPath\""
+            )
+        }
     }
 }

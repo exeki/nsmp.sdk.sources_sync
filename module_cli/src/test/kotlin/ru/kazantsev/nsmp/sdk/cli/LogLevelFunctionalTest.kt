@@ -27,6 +27,22 @@ class LogLevelFunctionalTest {
         assertFalse(result.output.contains("[DEBUG] CLI - start parse"))
     }
 
+    @Test
+    fun `debug args log masks accessKey`() {
+        val secret = "top-secret-key"
+        val result = runCliProcess(
+            "pull",
+            "--log-level",
+            "debug",
+            "--accessKey",
+            secret
+        )
+
+        assertEquals(1, result.exitCode)
+        assertContains(result.output, "[DEBUG] CLI - args: pull --log-level debug --accessKey ***")
+        assertFalse(result.output.contains(secret))
+    }
+
     private fun runCliProcess(vararg args: String): ProcessResult {
         val javaExecutable = buildString {
             append(System.getProperty("java.home"))

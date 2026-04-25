@@ -24,6 +24,7 @@ abstract class PushTask : AbstractTask() {
     @TaskAction
     fun action() {
         logger.lifecycle("Running Push task")
+        logTaskOptionsSafely(additionalOptions = mapOf("force" to force.orNull))
         val res = createService().push(
             createRequest(),
             parseBooleanOption("force", force.orNull ?: "false")

@@ -15,6 +15,7 @@ abstract class PullTask : AbstractTask() {
     @TaskAction
     fun action() {
         logger.lifecycle("Running Pull task")
+        logTaskOptionsSafely()
         val req = createRequest()
         val res = createService().pull(req)
         logger.lifecycle("Pulled ${res.scripts.size} scripts, ${res.modules.size} modules, ${res.advImports.size} advImports")
