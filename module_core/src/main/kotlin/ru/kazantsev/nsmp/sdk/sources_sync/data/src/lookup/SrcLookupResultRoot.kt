@@ -12,8 +12,6 @@ class SrcLookupResultRoot<T : ISrcCode>(
     override val advImports: SrcLookupResult<T>
 ) : IRoot<SrcLookupResult<T>> {
 
-    val results = setOf(scripts, modules, advImports)
-
     override fun isNotEmpty(): Boolean {
         return scripts.found.isNotEmpty() || modules.found.isNotEmpty() || advImports.found.isNotEmpty()
     }

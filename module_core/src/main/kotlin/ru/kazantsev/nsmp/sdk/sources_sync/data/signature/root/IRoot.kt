@@ -8,6 +8,7 @@ interface IRoot<T : Any> {
     fun isEmpty(): Boolean = !isNotEmpty()
     fun isNotEmpty(): Boolean
 
+    @Suppress("unused")
     val entries : Set<T>
         get() = setOf(scripts, modules, advImports)
 }
