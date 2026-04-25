@@ -44,7 +44,9 @@ class SrcSyncConnector(params: ConnectorParams) : Connector(params) {
             null,
         )
         BadResponseException.throwIfNotOk(this, response)
-        val bodyText = EntityUtils.toString(response.entity, Charsets.UTF_8)
-        return json.decodeFromString(bodyText)
+        response.use {
+            val bodyText = EntityUtils.toString(response.entity, Charsets.UTF_8)
+            return json.decodeFromString(bodyText)
+        }
     }
 }

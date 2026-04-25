@@ -14,6 +14,8 @@ class SrcLookupResult<T : ISrcCode>(
 
     val found: SrcSet<T> = SrcSet(set = found, type = type)
 
+    fun convertToSrcSet() = SrcSet(set = this.found, type = type)
+
     companion object {
         fun <T : ISrcCode> empty(type: SrcType): SrcLookupResult<T> {
             return SrcLookupResult(

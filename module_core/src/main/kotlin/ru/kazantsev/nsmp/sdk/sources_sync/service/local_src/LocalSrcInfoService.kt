@@ -2,53 +2,52 @@ package ru.kazantsev.nsmp.sdk.sources_sync.service.local_src
 
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.LocalStorage
+import ru.kazantsev.nsmp.sdk.sources_sync.Constants
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import java.io.File
+import ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.storage.SrcInfoFile
 import java.nio.file.Path
 
 /**
  * Сервис для локального хранилища метаданных `src` в `.smp_sdk/src_info.json`.
  */
 class LocalSrcInfoService(private val projectPath: Path) {
+
     private val log = LoggerFactory.getLogger(javaClass)
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
+        encodeDefaults = true
     }
 
-    companion object {
-        private const val SDK_DIR_PATH = ".nsmp_sdk"
-        private const val INFO_FILE_NAME = "src_info.json"
-    }
+    val scriptsSrcInfoFile = SrcInfoFile(
+        projectPath = projectPath,
+        fileName = Constants.SCRIPTS_INFO_FILE_NAME,
+        type = SrcType.SCRIPT,
+        json = json
+    )
 
-    private val infoFilePath: File
-        get() = projectPath.resolve(SDK_DIR_PATH).resolve(INFO_FILE_NAME).toFile()
+    val modulesSrcInfoFile = SrcInfoFile(
+        projectPath = projectPath,
+        fileName = Constants.MODULES_INFO_FILE_NAME,
+        type = SrcType.MODULE,
+        json = json
+    )
 
-    /**
-     * Возвращает файл локального хранилища метаданных.
-     */
-    @Suppress("unused")
-    fun getInfoFile(): File = infoFilePath
+    val advImportsSrcInfoFile = SrcInfoFile(
+        projectPath = projectPath,
+        fileName = Constants.ADV_IMPORTS_INFO_FILE_NAME,
+        type = SrcType.ADV_IMPORT,
+        json = json
+    )
 
-    /**
-     * Читает локальный файл с информацией целиком
-     */
-    fun readLocalSrcInfo(): LocalStorage {
-        log.debug("Read local info: file={}", infoFilePath)
-        if (!infoFilePath.exists() || infoFilePath.readText().isBlank()) {
-            log.debug("Local info file not found or empty")
-            return LocalStorage.empty()
-        }
-        val serializer = LocalStorage.serializer()
-        return json.decodeFromString(serializer, infoFilePath.readText())
-    }
+
+
+
+
 
     /**
      * Выполнить поиск по информации по исходникам
@@ -56,16 +55,10 @@ class LocalSrcInfoService(private val projectPath: Path) {
      * @return результаты поиска
      */
     fun lookupLocalSrcInfo(req: SrcRequest): SrcLookupResultRoot<LocalInfo> {
-        val localStorage = readLocalSrcInfo()
-        val srcInfo = SrcSetRoot(
-            scripts = localStorage.scripts,
-            modules = localStorage.modules,
-            advImports = localStorage.advImports
-        )
         val filtered = SrcLookupResultRoot(
-            scripts = lookupForLocalInfo(srcInfo.scripts, req.getScriptsRequest()),
-            modules = lookupForLocalInfo(srcInfo.modules, req.getModulesRequest()),
-            advImports = lookupForLocalInfo(srcInfo.advImports, req.getAdvImportsRequest()),
+            scripts = scriptsSrcInfoFile.lookupLocalInfo(req.getScriptsRequest()),
+            modules = modulesSrcInfoFile.lookupLocalInfo(req.getModulesRequest()),
+            advImports = advImportsSrcInfoFile.lookupLocalInfo(req.getAdvImportsRequest()),
         )
         log.debug(
             "Scripts local info found: {}, notFound: {}, duplicated: {}",
@@ -107,64 +100,12 @@ class LocalSrcInfoService(private val projectPath: Path) {
             root.modules.size,
             root.advImports.size
         )
-        val sdkDir = projectPath.resolve(SDK_DIR_PATH).toFile().apply { mkdirs() }
-        val currentInfoFile = sdkDir.resolve(INFO_FILE_NAME)
-        if (!currentInfoFile.exists()) {
-            currentInfoFile.createNewFile()
-        }
-
-        val currentRoot = readLocalSrcInfo()
-        val updatedRoot = LocalStorage(
-            scripts = mergeEntries(currentRoot.scripts, root.scripts),
-            modules = mergeEntries(currentRoot.modules, root.modules),
-            advImports = mergeEntries(currentRoot.advImports, root.advImports),
-        )
-
-        currentInfoFile.writeText(json.encodeToString(updatedRoot))
-        log.debug("Update local info file completed: file={}", currentInfoFile)
+        scriptsSrcInfoFile.update(root.scripts)
+        modulesSrcInfoFile.update(root.modules)
+        advImportsSrcInfoFile.update(root.advImports)
+        log.debug("Update local info files completed")
         return root
     }
 
-    private fun mergeEntries(existingEntries: Set<LocalInfo>, incomingEntries: Set<LocalInfo>): Set<LocalInfo> {
-        val byCode = linkedMapOf<String, LocalInfo>()
 
-        existingEntries.forEach { info ->
-            byCode[info.code] = info
-        }
-
-        incomingEntries.forEach { info ->
-            byCode[info.code] = info
-        }
-
-        return byCode.values.toSet()
-    }
-
-    private fun lookupForLocalInfo(
-        localSrcInfo: SrcSet<LocalInfo>,
-        req: SrcSetRequest
-    ): SrcLookupResult<LocalInfo> {
-        return if (req.all) SrcLookupResult(
-            found = localSrcInfo.filter { !req.excludedCodes.contains(it.code) }.toSet(),
-            notFound = setOf(),
-            duplicated = setOf(),
-            type = req.type
-        )
-        else {
-            val found: MutableSet<LocalInfo> = mutableSetOf()
-            val notFound: MutableSet<String> = mutableSetOf()
-            req.includedCodes.forEach { code ->
-                if (!req.excludedCodes.contains(code)) {
-                    val info = localSrcInfo.find { it.code == code }
-                    if (info != null) found.add(info)
-                    else notFound.add(code)
-                }
-            }
-            SrcLookupResult(
-                found = found,
-                notFound = notFound,
-                duplicated = setOf(),
-                type = req.type
-            )
-        }
-    }
 }

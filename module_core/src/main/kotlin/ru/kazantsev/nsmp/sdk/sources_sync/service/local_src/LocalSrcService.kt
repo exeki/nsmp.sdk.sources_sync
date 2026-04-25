@@ -17,7 +17,7 @@ import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.NoLocalSrcFilesExc
 class LocalSrcService(srcFoldersParams: SrcFoldersParams) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    val localSrcFileService = LocalSrcFilesService(srcFoldersParams)
+    val localSrcFileService = LocalSrcFileService(srcFoldersParams)
     val localSrcInfoService = LocalSrcInfoService(srcFoldersParams.getProjectAbsolutePath())
 
     fun <T : ILocalFile> compareLocalFileAndInfo(

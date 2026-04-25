@@ -4,11 +4,11 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.ISrcCode
 
 open class SrcSet<T : ISrcCode>(
-    set: Set<T>,
+    val map: Map<String, T>,
     override val type: SrcType
 ) : ISrcSet<T> {
 
-    protected val map: Map<String, T> = set.associateBy { it.code }
+    constructor(set: Set<T>, type: SrcType) : this(set.associateBy { it.code }, type)
 
     override val size: Int = map.size
 
@@ -28,5 +28,9 @@ open class SrcSet<T : ISrcCode>(
 
     override fun <K : ISrcCode> convert(transform: (T) -> K): SrcSet<K> {
         return SrcSet(this.map(transform).toSet(), this.type)
+    }
+
+    companion object {
+        fun <T : ISrcCode> empty(type: SrcType): SrcSet<T> = SrcSet(setOf(), type)
     }
 }

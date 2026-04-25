@@ -1,6 +1,7 @@
-package ru.kazantsev.nsmp.sdk.sources_sync.service
+package ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.storage
 
 import org.slf4j.LoggerFactory
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
@@ -42,8 +43,7 @@ class SrcFolder(
     private fun getInfo(remoteInfo: RemoteInfo): LocalInfo {
         return LocalInfo(
             checksum = remoteInfo.checksum,
-            code = remoteInfo.code,
-            lastSync = LocalDateTime.now().format(dateFormatter)
+            code = remoteInfo.code
         )
     }
 
@@ -65,7 +65,8 @@ class SrcFolder(
     /**
      * Получить все файлы исходников из папки.
      */
-    fun findSourceFiles(req: SrcSetRequest): SrcLookupResult<LocalFile> {
+    fun lookupLocalFiles(req: SrcSetRequest): SrcLookupResult<LocalFile> {
+        if (req.isEmpty()) return SrcLookupResult.empty(type = type)
         val requestedCodes = req.includedCodes.filter { it !in req.excludedCodes }.toSet()
         log.debug(
             "Find source files fixed started: path={}, requested={}, all={}",
@@ -76,12 +77,13 @@ class SrcFolder(
 
         if (!file.exists()) {
             log.debug("Find source files fixed completed: source path does not exist")
-            return SrcLookupResult.empty(type)
+            return SrcLookupResult.Companion.empty(type)
         }
 
         val allFiles = file.walkTopDown().filter { it.isFile }.toList()
         val eligibleFiles = allFiles.filter { candidate ->
-            candidate.nameWithoutExtension !in req.excludedCodes
+            candidate.nameWithoutExtension !in req.excludedCodes &&
+                    candidate.extension == type.format.code
         }
         val result: SrcLookupResult<LocalFile>
 
@@ -126,9 +128,10 @@ class SrcFolder(
         return result
     }
 
-    @Suppress("unused")
-    fun getAllSourceFiles(): SrcLookupResult<LocalFile> {
-        return findSourceFiles(SrcSetRequest(all = true, type = type))
+    fun getLocalFiles(req: SrcSetRequest): SrcSet<LocalFile> {
+        val result = lookupLocalFiles(req)
+        //TODO проверка на потерю
+        return result.convertToSrcSet()
     }
 
     /**

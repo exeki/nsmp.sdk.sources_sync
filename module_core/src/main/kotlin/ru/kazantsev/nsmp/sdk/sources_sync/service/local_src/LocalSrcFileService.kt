@@ -9,9 +9,9 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.service.SrcFolder
+import ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.storage.SrcFolder
 
-class LocalSrcFilesService(srcFoldersParams: SrcFoldersParams) {
+class LocalSrcFileService(srcFoldersParams: SrcFoldersParams) {
     private val log = LoggerFactory.getLogger(javaClass)
 
     val scriptsSrcFolder = SrcFolder(
@@ -33,9 +33,9 @@ class LocalSrcFilesService(srcFoldersParams: SrcFoldersParams) {
     fun lookupLocalFiles(req: SrcRequest): SrcLookupResultRoot<LocalFile> {
         log.debug("Find local files started: {}", req)
         val result = SrcLookupResultRoot(
-            scripts = scriptsSrcFolder.findSourceFiles(req.getScriptsRequest()),
-            modules = modulesSrcFolder.findSourceFiles(req.getModulesRequest()),
-            advImports = advImportsSrcFolder.findSourceFiles(req.getAdvImportsRequest())
+            scripts = scriptsSrcFolder.lookupLocalFiles(req.getScriptsRequest()),
+            modules = modulesSrcFolder.lookupLocalFiles(req.getModulesRequest()),
+            advImports = advImportsSrcFolder.lookupLocalFiles(req.getAdvImportsRequest())
         )
         log.debug(
             "Find local files completed: scripts(found={}, notFound={}, duplicated={}), modules(found={}, notFound={}, duplicated={}), advImports(found={}, notFound={}, duplicated={})",

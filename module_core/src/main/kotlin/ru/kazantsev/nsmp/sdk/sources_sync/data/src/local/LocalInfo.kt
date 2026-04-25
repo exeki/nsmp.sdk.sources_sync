@@ -1,6 +1,12 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.data.src.local
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import ru.kazantsev.nsmp.basic_api_connector.dto.nsmp.SrcChecksum
 import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalChecksum
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
@@ -14,17 +20,29 @@ import java.time.format.DateTimeFormatter
 open class LocalInfo(
     override val code: String,
     override val checksum: String,
-    @Suppress("unused")
-    val lastSync: String = nowFormatted()
+    @Serializable(with = LocalDateTimeAsStringSerializer::class)
+    val lastSync: LocalDateTime = now()
 ) : ILocalChecksum {
     constructor(remoteInfo: RemoteInfo) : this(remoteInfo.code, remoteInfo.checksum)
     constructor(remoteInfo: SrcChecksum) : this(remoteInfo.code, remoteInfo.checksum)
 
     companion object {
-        private val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")
+        fun now(): LocalDateTime = LocalDateTime.now()
+    }
+}
 
-        fun nowFormatted(): String {
-            return LocalDateTime.now().format(formatter)
-        }
+object LocalDateTimeAsStringSerializer : KSerializer<LocalDateTime> {
+    private val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")
+
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("LocalDateTimeAsString", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: LocalDateTime) {
+        encoder.encodeString(value.format(formatter))
+    }
+
+    override fun deserialize(decoder: Decoder): LocalDateTime {
+        val value = decoder.decodeString()
+        return LocalDateTime.parse(value, formatter)
     }
 }
