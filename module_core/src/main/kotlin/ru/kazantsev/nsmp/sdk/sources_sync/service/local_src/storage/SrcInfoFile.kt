@@ -13,7 +13,9 @@ import java.nio.file.Path
 
 class SrcInfoFile(
     val type: SrcType,
+    @Suppress("CanBeParameter", "RedundantSuppression")
     private val projectPath: Path,
+    @Suppress("CanBeParameter", "RedundantSuppression")
     private val fileName: String,
     private val json : Json
 ) {
@@ -92,6 +94,7 @@ class SrcInfoFile(
         return result
     }
 
+    @Suppress("unused")
     fun getLocalInfo(req: SrcSetRequest): SrcSet<LocalInfo> {
         val result = lookupLocalInfo(req)
         return result.convertToSrcSet()

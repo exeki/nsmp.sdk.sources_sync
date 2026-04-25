@@ -10,9 +10,11 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.DuplicatedLocalSrcFileFoundException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.LocalSrcFilesNotFoundException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.NoLocalSrcFilesException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupResultRootException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.EmptyLocalSrcFileLookupResultRootException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultRootException
 
 class LocalSrcService(srcFoldersParams: SrcFoldersParams) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -41,9 +43,9 @@ class LocalSrcService(srcFoldersParams: SrcFoldersParams) {
     fun getLocalSrc(req: SrcRequest): SrcSetRoot<LocalFileInfo> {
         log.info("Read local src started: {}", req)
         val filesLookupResult = localSrcFileService.lookupLocalFiles(req)
-        LocalSrcFilesNotFoundException.throwIfNecessary(filesLookupResult)
-        NoLocalSrcFilesException.throwIfNecessary(filesLookupResult)
-        DuplicatedLocalSrcFileFoundException.throwIfNecessary(filesLookupResult)
+        EmptyLocalSrcFileLookupResultRootException.throwIfNecessary(filesLookupResult)
+        NotFoundLocalSrcFileLookupResultRootException.throwIfNecessary(filesLookupResult)
+        DuplicatedLocalSrcFileLookupResultRootException.throwIfNecessary(filesLookupResult)
         val result = compareLocalFileAndInfo(
             fileRoot = filesLookupResult.convertToSrcSetRoot(),
             infoRoot = localSrcInfoService.getLocalSrcInfo(filesLookupResult.convertToRequest { it.code })

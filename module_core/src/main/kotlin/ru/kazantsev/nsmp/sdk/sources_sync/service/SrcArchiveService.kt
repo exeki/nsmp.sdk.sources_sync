@@ -10,7 +10,7 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfoFileRoot
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.InfoFileNotFound
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.ScriptTextNotFound
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.RemoteSrcTextNotFound
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.util.zip.ZipEntry
@@ -80,19 +80,19 @@ class SrcArchiveService {
             scripts = srcInfo.scripts.map {
                 RemoteSrcTextInfo(
                     info = it,
-                    text = scriptTexts[it.code] ?: throw ScriptTextNotFound(it.code, SrcType.SCRIPT)
+                    text = scriptTexts[it.code] ?: throw RemoteSrcTextNotFound(it.code, SrcType.SCRIPT)
                 )
             }.toSet(),
             modules = srcInfo.modules.map {
                 RemoteSrcTextInfo(
                     info = it,
-                    text = moduleTexts[it.code] ?: throw ScriptTextNotFound(it.code, SrcType.MODULE)
+                    text = moduleTexts[it.code] ?: throw RemoteSrcTextNotFound(it.code, SrcType.MODULE)
                 )
             }.toSet(),
             advImports = srcInfo.advImports.map {
                 RemoteSrcTextInfo(
                     info = it,
-                    text = advImportTexts[it.code] ?: throw ScriptTextNotFound(it.code, SrcType.ADV_IMPORT)
+                    text = advImportTexts[it.code] ?: throw RemoteSrcTextNotFound(it.code, SrcType.ADV_IMPORT)
                 )
             }.toSet()
         )

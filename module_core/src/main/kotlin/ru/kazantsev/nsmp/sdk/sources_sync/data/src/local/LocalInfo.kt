@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter
 open class LocalInfo(
     override val code: String,
     override val checksum: String,
+    @Suppress("unused")
     @Serializable(with = LocalDateTimeAsStringSerializer::class)
     val lastSync: LocalDateTime = now()
 ) : ILocalChecksum {

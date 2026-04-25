@@ -8,4 +8,6 @@ interface IRoot<T : Any> {
     fun isEmpty(): Boolean = !isNotEmpty()
     fun isNotEmpty(): Boolean
 
+    val entries : Set<T>
+        get() = setOf(scripts, modules, advImports)
 }

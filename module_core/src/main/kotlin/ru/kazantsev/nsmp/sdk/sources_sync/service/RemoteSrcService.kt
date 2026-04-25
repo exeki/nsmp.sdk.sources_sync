@@ -13,8 +13,8 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.NoRemoteSrcFilesException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.RemoteSrcFilesNotFoundException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.lookup.EmptyRemoteSrcFileLookupResultRootException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote.lookup.NotFoundRemoteSrcFileLookupResultRootException
 
 class RemoteSrcService(connectorParams: ConnectorParams) {
 
@@ -72,8 +72,8 @@ class RemoteSrcService(connectorParams: ConnectorParams) {
      */
     fun getRemoteSrc(req: SrcRequest): SrcSetRoot<RemoteSrcTextInfo> {
         val lookupResult = lookupRemoteSrc(req)
-        NoRemoteSrcFilesException.throwIfNecessary(lookupResult)
-        RemoteSrcFilesNotFoundException.throwIfNecessary(lookupResult)
+        EmptyRemoteSrcFileLookupResultRootException.throwIfNecessary(lookupResult)
+        NotFoundRemoteSrcFileLookupResultRootException.throwIfNecessary(lookupResult)
         return lookupResult.convertToSrcSetRoot()
     }
 

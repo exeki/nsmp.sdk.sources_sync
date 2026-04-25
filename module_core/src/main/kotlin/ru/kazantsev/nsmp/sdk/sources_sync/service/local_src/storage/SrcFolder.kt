@@ -10,10 +10,11 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteSrcTextInfo
 import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.EmptyLocalSrcFileLookupResultException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultException
 import java.io.File
 import java.nio.file.Path
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 /**
  * Описывает один source set проекта и операции с ним.
@@ -30,8 +31,6 @@ class SrcFolder(
     val absolutePath: Path = projectPath.resolve(relativePathString).normalize()
 
     val file: File = absolutePath.toFile()
-
-    val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -128,10 +127,14 @@ class SrcFolder(
         return result
     }
 
+    @Suppress("unused")
     fun getLocalFiles(req: SrcSetRequest): SrcSet<LocalFile> {
-        val result = lookupLocalFiles(req)
-        //TODO проверка на потерю
-        return result.convertToSrcSet()
+        if(req.isEmpty()) return SrcSet.empty(type)
+        val srcLookupResult = lookupLocalFiles(req)
+        EmptyLocalSrcFileLookupResultException.throwIfNecessary(srcLookupResult)
+        NotFoundLocalSrcFileLookupResultException.throwIfNecessary(srcLookupResult)
+        DuplicatedLocalSrcFileLookupException.throwIfNecessary(srcLookupResult)
+        return srcLookupResult.convertToSrcSet()
     }
 
     /**
