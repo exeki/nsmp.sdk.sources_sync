@@ -1,6 +1,6 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.exception.src
 
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcType
 
 abstract class LookupResultExceptionCompanion {
     fun buildMessage(

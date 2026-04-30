@@ -7,7 +7,7 @@ import kotlinx.cli.default
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcRequest
 
 @OptIn(ExperimentalCli::class)
 abstract class AbstractCommand(

@@ -1,5 +1,6 @@
 package ru.kazantsev.nsmp.sdk.sources_sync
 
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcType
 import java.nio.file.Path
 
 class SrcFoldersParams(
@@ -32,4 +33,12 @@ class SrcFoldersParams(
     fun getModulesRelativePathString(): String = modulesRelativePath.replace("\\", "/")
 
     fun getAdvImportsRelativePathString(): String = advImportsRelativePath.replace("\\", "/")
+
+    fun getSrcRelativePathByType(type : SrcType) : String {
+        return when (type) {
+            SrcType.SCRIPT -> getScriptsRelativePathString()
+            SrcType.MODULE -> getModulesRelativePathString()
+            SrcType.ADV_IMPORT -> getAdvImportsRelativePathString()
+        }
+    }
 }

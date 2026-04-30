@@ -1,6 +1,6 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.exception.src.remote
 
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcType
 
 @Suppress("CanBeParameter")
 class RemoteSrcTextNotFound(val srcCode: String, val srcType: SrcType) :

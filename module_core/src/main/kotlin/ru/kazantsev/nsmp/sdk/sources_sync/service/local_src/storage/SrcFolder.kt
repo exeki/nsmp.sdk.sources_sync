@@ -1,13 +1,11 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.storage
 
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteTextInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcType
+import ru.kazantsev.nsmp.sdk.sources_sync.data.sets.SrcLookup
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.src.ISrcText
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFile
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.fs.SrcCodeValidationException
 import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.fs.SrcPathValidationException
 import java.io.File
@@ -43,35 +41,34 @@ class SrcFolder(
         )
     }
 
+    private fun writeSourceFile(code : String, text : String): File {
+        validateSourceCode(code)
+        val packageDirectory = resolvePackageDirectory(text)
+        packageDirectory.toFile().mkdirs()
+        val sourceFile = packageDirectory.resolve("$code.${type.format.code}").normalize()
+        validateResolvedPath(sourceFile)
+        val file = sourceFile.toFile()
+        file.parentFile.mkdirs()
+        file.writeText(text)
+        return file
+    }
+
     /**
      * Записать новый файл исходника.
      * @param src ДТО файла
      */
-    fun writeSourceFile(src: RemoteTextInfo): LocalFileInfo {
-        validateSourceCode(src.info.code)
-        val packageDirectory = resolvePackageDirectory(src.text)
-        packageDirectory.toFile().mkdirs()
-        val sourceFile = packageDirectory.resolve("${src.info.code}.${type.format.code}").normalize()
-        validateResolvedPath(sourceFile)
-        val file = sourceFile.toFile()
-        file.parentFile.mkdirs()
-        file.writeText(src.text)
-        log.debug("Source file written: file={}", sourceFile)
-        return LocalFileInfo(
-            file = file,
-            code = src.info.code,
-            info = LocalInfo(
-                checksum = src.info.checksum,
-                code = src.info.code
-            )
+    fun <T : ISrcText> writeSourceFile(src: T): SrcFile {
+        return SrcFile(
+            file = writeSourceFile(src.code, src.text),
+            code = src.code
         )
     }
 
     /**
      * Получить все файлы исходников из папки.
      */
-    fun lookupLocalFiles(req: SrcSetRequest): SrcLookupResult<LocalFile> {
-        if (req.isEmpty()) return SrcLookupResult.empty(type = type)
+    fun lookupLocalFiles(req: SrcSetRequest): SrcLookup<SrcFile> {
+        if (req.isEmpty()) return SrcLookup.empty(type = type)
         val requestedCodes = req.includedCodes.filter { it !in req.excludedCodes }.toSet()
         log.debug(
             "Find source files fixed started: path={}, requested={}, all={}",
@@ -82,7 +79,7 @@ class SrcFolder(
 
         if (!file.exists()) {
             log.debug("Find source files fixed completed: source path does not exist")
-            return SrcLookupResult.Companion.empty(type)
+            return SrcLookup.Companion.empty(type)
         }
 
         val allFiles = file.walkTopDown().filter { it.isFile }.toList()
@@ -90,14 +87,14 @@ class SrcFolder(
             candidate.nameWithoutExtension !in req.excludedCodes &&
                     candidate.extension == type.format.code
         }
-        val result: SrcLookupResult<LocalFile>
+        val result: SrcLookup<SrcFile>
 
-        if (req.all) result = SrcLookupResult(
+        if (req.all) result = SrcLookup(
             notFound = emptySet(),
             duplicated = emptySet(),
             type = type,
             found = eligibleFiles.map { matchedFile ->
-                LocalFile(
+                SrcFile(
                     code = matchedFile.nameWithoutExtension,
                     file = matchedFile
                 )
@@ -106,18 +103,18 @@ class SrcFolder(
         else {
             val notFound = mutableSetOf<String>()
             val duplicated = mutableSetOf<String>()
-            val found = mutableSetOf<LocalFile>()
+            val found = mutableSetOf<SrcFile>()
             requestedCodes.forEach { srcCode ->
                 val matches = eligibleFiles.filter { matchedFile ->
                     matchedFile.nameWithoutExtension == srcCode
                 }
                 when (matches.size) {
                     0 -> notFound.add(srcCode)
-                    1 -> found.add(LocalFile(code = srcCode, file = matches.single()))
+                    1 -> found.add(SrcFile(code = srcCode, file = matches.single()))
                     else -> duplicated.add(srcCode)
                 }
             }
-            result = SrcLookupResult(
+            result = SrcLookup(
                 found = found,
                 notFound = notFound,
                 duplicated = duplicated,

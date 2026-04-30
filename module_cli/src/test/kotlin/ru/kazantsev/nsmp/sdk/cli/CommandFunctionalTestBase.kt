@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeEach
 import ru.kazantsev.nsmp.sdk.cli.commands.CommandArgs
 import ru.kazantsev.nsmp.sdk.runCli
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcType
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files

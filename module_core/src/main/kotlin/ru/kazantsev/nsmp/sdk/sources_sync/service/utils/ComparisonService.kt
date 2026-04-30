@@ -1,17 +1,14 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service.utils
 
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalChecksum
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalFile
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalSrc
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.remote.IRemoteChecksum
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.remote.IRemoteSrc
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcPair
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcSyncCheckPair
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.sets.SrcSet
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.src.ISrcChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.src.ISrc
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.src.ISrcFile
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFileChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcPair
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSyncCheckPair
 
 /**
  * Сервис для сравнения чексумм локальных и удалённых исходников
@@ -20,47 +17,40 @@ class ComparisonService {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    fun <T : ILocalFile> uniteLocalFileInfoSrcSetRoot(
+    fun <T : ISrcFile, C : ISrcChecksum> uniteFileChecksumSrcSetRoots(
         fileRoot: SrcSetRoot<T>,
-        infoRoot: SrcSetRoot<LocalInfo>
-    ): SrcSetRoot<LocalFileInfo> {
-        return SrcSetRoot(
-            scripts = uniteLocalFileInfoSrcSet(fileRoot.scripts, infoRoot.scripts),
-            modules = uniteLocalFileInfoSrcSet(fileRoot.modules, infoRoot.modules),
-            advImports = uniteLocalFileInfoSrcSet(fileRoot.advImports, infoRoot.advImports),
-        )
+        infoRoot: SrcSetRoot<C>
+    ): SrcSetRoot<SrcFileChecksum> {
+        return SrcSetRoot.byEnumIterator { uniteFileChecksumSrcSets(fileRoot[it], infoRoot[it]) }
     }
 
-    fun <T : ILocalFile> uniteLocalFileInfoSrcSet(
+    fun <T : ISrcFile, C : ISrcChecksum> uniteFileChecksumSrcSets(
         fileSrcSet: SrcSet<T>,
-        infoSrcSet: SrcSet<LocalInfo>
-    ) :  SrcSet<LocalFileInfo> {
-        return fileSrcSet.convert{
-            LocalFileInfo(
+        infoSrcSet: SrcSet<C>
+    ): SrcSet<SrcFileChecksum> {
+        return fileSrcSet.convert {
+            val info = infoSrcSet.getByCode(it.code)
+            SrcFileChecksum(
                 file = it.file,
                 code = it.code,
-                info = infoSrcSet.getByCode(it.code)
+                checksum = info?.checksum
             )
         }
     }
 
-    fun <L : ILocalSrc, R : IRemoteSrc> pairSrcSets(
-        local: SrcSet<L>,
-        remote: SrcSet<R>
+    fun <L : ISrc, R : ISrc> pairSrcSets(
+        left: SrcSet<L>,
+        right: SrcSet<R>
     ): SrcSet<SrcPair<L, R>> {
-        if (remote.type != local.type) throw IllegalArgumentException("Cannot pair src sets with different types")
-        return local.convert { SrcPair(code = it.code, remote = remote.getByCode(it.code), local = it) }
+        if (right.type != left.type) throw IllegalArgumentException("Cannot pair src sets with different types")
+        return left.convert { SrcPair(code = it.code, right = right.getByCode(it.code), left = it) }
     }
 
-    fun <L : ILocalSrc, R : IRemoteSrc> pairSrcSetRoots(
-        localSrcSetRoot: SrcSetRoot<L>,
-        remoteSrcSetRoot: SrcSetRoot<R>
+    fun <L : ISrc, R : ISrc> pairSrcSetRoots(
+        leftSrcSetRoot: SrcSetRoot<L>,
+        rightSrcSetRoot: SrcSetRoot<R>
     ): SrcSetRoot<SrcPair<L, R>> {
-        val pairsRoot = SrcSetRoot(
-            scripts = pairSrcSets(localSrcSetRoot.scripts, remoteSrcSetRoot.scripts),
-            modules = pairSrcSets(localSrcSetRoot.modules, remoteSrcSetRoot.modules),
-            advImports = pairSrcSets(localSrcSetRoot.advImports, remoteSrcSetRoot.advImports)
-        )
+        val pairsRoot = SrcSetRoot.byEnumIterator { pairSrcSets(leftSrcSetRoot[it], rightSrcSetRoot[it]) }
         log.debug(
             "Checksum compare completed: diff: scripts={}, modules={}, advImports={}",
             pairsRoot.scripts.size,
@@ -70,16 +60,16 @@ class ComparisonService {
         return pairsRoot
     }
 
-    fun <L : ILocalChecksum, R : IRemoteChecksum> pairSyncCheck(
-        localSrcSetRoot: SrcSetRoot<L>,
-        remoteSrcSetRoot: SrcSetRoot<R>
+    fun <L : ISrcChecksum, R : ISrcChecksum> pairSyncCheck(
+        leftSrcSetRoot: SrcSetRoot<L>,
+        rightSrcSetRoot: SrcSetRoot<R>
     ): SrcSetRoot<SrcSyncCheckPair<L, R>> {
-        val pairs = pairSrcSetRoots(localSrcSetRoot, remoteSrcSetRoot)
-        return pairs.convert {
+        val pairs = pairSrcSetRoots(leftSrcSetRoot, rightSrcSetRoot)
+        return pairs.convert { _, pair ->
             SrcSyncCheckPair(
-                code = it.code,
-                remote = it.remote,
-                local = it.local
+                code = pair.code,
+                right = pair.right,
+                left = pair.left
             )
         }
     }

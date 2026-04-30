@@ -2,55 +2,34 @@ package ru.kazantsev.nsmp.sdk.sources_sync.service.local_src
 
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFile
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteTextInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.Root
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.SrcLookupRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.sets.SrcLookup
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.src.ISrcText
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFile
 import ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.storage.SrcFolder
 
 class LocalSrcFileService(srcFoldersParams: SrcFoldersParams) {
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val scriptsSrcFolder = SrcFolder(
-        projectPath = srcFoldersParams.getProjectAbsolutePath(),
-        relativePathString = srcFoldersParams.getScriptsRelativePathString(),
-        type = SrcType.SCRIPT
-    )
-    private val modulesSrcFolder = SrcFolder(
-        projectPath = srcFoldersParams.getProjectAbsolutePath(),
-        relativePathString = srcFoldersParams.getModulesRelativePathString(),
-        type = SrcType.MODULE
-    )
-    private val advImportsSrcFolder = SrcFolder(
-        projectPath = srcFoldersParams.getProjectAbsolutePath(),
-        relativePathString = srcFoldersParams.getAdvImportsRelativePathString(),
-        type = SrcType.ADV_IMPORT
-    )
-
-    private fun getSrcFolderByType(type: SrcType): SrcFolder {
-        return when (type) {
-            SrcType.SCRIPT -> scriptsSrcFolder
-            SrcType.MODULE -> modulesSrcFolder
-            SrcType.ADV_IMPORT -> advImportsSrcFolder
-        }
-    }
-
-    fun lookupLocalFileSrcSet(req: SrcSetRequest): SrcLookupResult<LocalFile> {
-        return getSrcFolderByType(req.type).lookupLocalFiles(req)
-    }
-
-    fun lookupLocalFileSrcSetRoot(req: SrcRequest): SrcLookupResultRoot<LocalFile> {
-        log.debug("Find local files started: {}", req)
-        val result = SrcLookupResultRoot(
-            scripts = lookupLocalFileSrcSet(req.getScriptsRequest()),
-            modules = lookupLocalFileSrcSet(req.getModulesRequest()),
-            advImports = lookupLocalFileSrcSet(req.getAdvImportsRequest())
+    private val srcForderRoot = Root.byEnumIterator { type ->
+        SrcFolder(
+            projectPath = srcFoldersParams.getProjectAbsolutePath(),
+            relativePathString = srcFoldersParams.getSrcRelativePathByType(type),
+            type = type
         )
+    }
+
+    fun lookupLocalFileSrcSet(req: SrcSetRequest): SrcLookup<SrcFile> {
+        return srcForderRoot[req.type].lookupLocalFiles(req)
+    }
+
+    fun lookupLocalFileSrcSetRoot(req: SrcRequest): SrcLookupRoot<SrcFile> {
+        log.debug("Find local files started: {}", req)
+        val result = SrcLookupRoot.byEnumIterator { srcForderRoot[it].lookupLocalFiles(req.getSetRequest(it)) }
         log.debug(
             "Find local files completed: scripts(found={}, notFound={}, duplicated={}), modules(found={}, notFound={}, duplicated={}), advImports(found={}, notFound={}, duplicated={})",
             result.scripts.found.size,
@@ -66,18 +45,14 @@ class LocalSrcFileService(srcFoldersParams: SrcFoldersParams) {
         return result
     }
 
-    fun whiteLocalFiles(src: SrcSetRoot<RemoteTextInfo>): SrcSetRoot<LocalFileInfo> {
+    fun <T : ISrcText> whiteLocalFiles(src: SrcSetRoot<T>): SrcSetRoot<SrcFile> {
         log.debug(
             "Write local files started: scripts={}, modules={}, advImports={}",
             src.scripts.size,
             src.modules.size,
             src.advImports.size
         )
-        val result = src.convert(
-            scriptTransform = { srcText -> scriptsSrcFolder.writeSourceFile(srcText) },
-            moduleTransform = { srcText -> modulesSrcFolder.writeSourceFile(srcText) },
-            advImportTransform = { srcText -> advImportsSrcFolder.writeSourceFile(srcText) }
-        )
+        val result = src.convert { type, srcText -> srcForderRoot[type].writeSourceFile(srcText) }
         log.debug(
             "Write local files completed: scripts={}, modules={}, advImports={}",
             result.scripts.size,

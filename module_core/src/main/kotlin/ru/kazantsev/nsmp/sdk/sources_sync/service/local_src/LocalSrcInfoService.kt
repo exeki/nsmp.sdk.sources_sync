@@ -2,14 +2,14 @@ package ru.kazantsev.nsmp.sdk.sources_sync.service.local_src
 
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.sdk.sources_sync.Constants
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResult
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.lookup.SrcLookupResultRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.LocalStorageInfo
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.Root
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.SrcLookupRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.sets.SrcLookup
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.src.ISrcChecksum
 import ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.storage.SrcInfoFile
 import java.nio.file.Path
 
@@ -25,37 +25,17 @@ class LocalSrcInfoService(private val projectPath: Path) {
         encodeDefaults = true
     }
 
-    val scriptsSrcInfoFile = SrcInfoFile(
-        projectPath = projectPath,
-        fileName = Constants.SCRIPTS_INFO_FILE_NAME,
-        type = SrcType.SCRIPT,
-        json = json
-    )
-
-    val modulesSrcInfoFile = SrcInfoFile(
-        projectPath = projectPath,
-        fileName = Constants.MODULES_INFO_FILE_NAME,
-        type = SrcType.MODULE,
-        json = json
-    )
-
-    val advImportsSrcInfoFile = SrcInfoFile(
-        projectPath = projectPath,
-        fileName = Constants.ADV_IMPORTS_INFO_FILE_NAME,
-        type = SrcType.ADV_IMPORT,
-        json = json
-    )
-
-    private fun getSrcInfoFileByType(type: SrcType): SrcInfoFile {
-        return when (type) {
-            SrcType.SCRIPT -> scriptsSrcInfoFile
-            SrcType.MODULE -> modulesSrcInfoFile
-            SrcType.ADV_IMPORT -> advImportsSrcInfoFile
-        }
+    val srcInfoFileRoot = Root.byEnumIterator { type ->
+        SrcInfoFile(
+            projectPath = projectPath,
+            fileName = "${type.code}.json",
+            type = type,
+            json = json
+        )
     }
 
-    fun lookupLocalInfoSrcSet(req: SrcSetRequest): SrcLookupResult<LocalInfo> {
-        return getSrcInfoFileByType(req.type).lookupLocalInfoSrcSet(req)
+    fun lookupLocalInfoSrcSet(req: SrcSetRequest): SrcLookup<LocalStorageInfo> {
+        return srcInfoFileRoot[req.type].lookupLocalInfoSrcSet(req)
     }
 
     /**
@@ -63,12 +43,10 @@ class LocalSrcInfoService(private val projectPath: Path) {
      * @param req запрос
      * @return результаты поиска
      */
-    fun lookupLocalInfoSrcSetRoot(req: SrcRequest): SrcLookupResultRoot<LocalInfo> {
-        val filtered = SrcLookupResultRoot(
-            scripts = scriptsSrcInfoFile.lookupLocalInfoSrcSet(req.getScriptsRequest()),
-            modules = modulesSrcInfoFile.lookupLocalInfoSrcSet(req.getModulesRequest()),
-            advImports = advImportsSrcInfoFile.lookupLocalInfoSrcSet(req.getAdvImportsRequest()),
-        )
+    fun lookupLocalInfoSrcSetRoot(req: SrcRequest): SrcLookupRoot<LocalStorageInfo> {
+        val filtered = SrcLookupRoot.byEnumIterator { type ->
+            srcInfoFileRoot[type].lookupLocalInfoSrcSet(req.getSetRequest(type))
+        }
         log.debug(
             "Scripts local info found: {}, notFound: {}, duplicated: {}",
             filtered.scripts.found.size,
@@ -93,16 +71,16 @@ class LocalSrcInfoService(private val projectPath: Path) {
     /**
      * Обновляет локальный файл метаданных, объединяя старые и новые записи по коду.
      */
-    fun updateInfoFile(root: SrcSetRoot<LocalInfo>): SrcSetRoot<LocalInfo> {
+    fun <T : ISrcChecksum> updateInfoFile(root: SrcSetRoot<T>): SrcSetRoot<T> {
         log.debug(
             "Update local info file started: scripts={}, modules={}, advImports={}",
             root.scripts.size,
             root.modules.size,
             root.advImports.size
         )
-        scriptsSrcInfoFile.update(root.scripts)
-        modulesSrcInfoFile.update(root.modules)
-        advImportsSrcInfoFile.update(root.advImports)
+        root.forEach { (type, _) ->
+            srcInfoFileRoot[type].update(root[type])
+        }
         log.debug("Update local info files completed")
         return root
     }

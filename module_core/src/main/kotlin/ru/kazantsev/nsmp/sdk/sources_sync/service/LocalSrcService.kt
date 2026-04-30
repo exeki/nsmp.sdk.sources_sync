@@ -1,19 +1,18 @@
 package ru.kazantsev.nsmp.sdk.sources_sync.service
 
 import org.slf4j.LoggerFactory
-import ru.kazantsev.nsmp.basic_api_connector.dto.nsmp.ScriptChecksums
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSet
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteTextInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcSetRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupResultException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupResultRootException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultRootException
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcSetRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.sets.SrcSet
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.src.ISrcChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFileChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcTextChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupRootException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupException
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupRootException
 import ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.LocalSrcFileService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.local_src.LocalSrcInfoService
 import ru.kazantsev.nsmp.sdk.sources_sync.service.utils.ComparisonService
@@ -30,20 +29,20 @@ class LocalSrcService(
      * Получить src set по запросу
      * @param req запрос
      * @return src set наполненный в соответствии с запросом
-     * @throws ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultException если искомое не найден
-     * @throws ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupResultException если файл дублирован в папке исходниками
+     * @throws ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupException если искомое не найден
+     * @throws ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupException если файл дублирован в папке исходниками
      */
     //Внешний API
     @Suppress("unused")
-    @Throws(DuplicatedLocalSrcFileLookupResultException::class, NotFoundLocalSrcFileLookupResultException::class)
-    fun getLocalSrcSet(req: SrcSetRequest): SrcSet<LocalFileInfo> {
+    @Throws(DuplicatedLocalSrcFileLookupException::class, NotFoundLocalSrcFileLookupException::class)
+    fun getLocalSrcSet(req: SrcSetRequest): SrcSet<SrcFileChecksum> {
         log.info("Read local src set started: {}", req)
         val filesLookupResult = localSrcFileService.lookupLocalFileSrcSet(req)
-        NotFoundLocalSrcFileLookupResultException.throwIfNecessary(filesLookupResult)
-        DuplicatedLocalSrcFileLookupResultException.throwIfNecessary(filesLookupResult)
+        NotFoundLocalSrcFileLookupException.throwIfNecessary(filesLookupResult)
+        DuplicatedLocalSrcFileLookupException.throwIfNecessary(filesLookupResult)
         val filesSrcSet = filesLookupResult.convertToSrcSet()
         val infoReq = filesSrcSet.convertToRequest()
-        val result = comparisonService.uniteLocalFileInfoSrcSet(
+        val result = comparisonService.uniteFileChecksumSrcSets(
             fileSrcSet = filesSrcSet,
             infoSrcSet = localSrcInfoService.lookupLocalInfoSrcSet(infoReq).convertToSrcSet()
         )
@@ -55,20 +54,23 @@ class LocalSrcService(
      * Получить src set root по запросу
      * @param req запрос
      * @return src set root наполненный в соответствии с запросом
-     * @throws ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupResultRootException если искомое не найден
-     * @throws ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupResultRootException если файл дублирован в папке исходниками
+     * @throws ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.NotFoundLocalSrcFileLookupRootException если искомое не найден
+     * @throws ru.kazantsev.nsmp.sdk.sources_sync.exception.src.local.lookup.DuplicatedLocalSrcFileLookupRootException если файл дублирован в папке исходниками
      */
-    @Throws(DuplicatedLocalSrcFileLookupResultRootException::class, NotFoundLocalSrcFileLookupResultRootException::class)
-    fun getLocalSrcSetRoot(req: SrcRequest): SrcSetRoot<LocalFileInfo> {
+    @Throws(
+        DuplicatedLocalSrcFileLookupRootException::class,
+        NotFoundLocalSrcFileLookupRootException::class
+    )
+    fun getLocalSrcSetRoot(req: SrcRequest): SrcSetRoot<SrcFileChecksum> {
         log.info("Read local src set root started: {}", req)
         val filesLookupResultRoot = localSrcFileService.lookupLocalFileSrcSetRoot(req)
-        NotFoundLocalSrcFileLookupResultRootException.throwIfNecessary(filesLookupResultRoot)
-        DuplicatedLocalSrcFileLookupResultRootException.throwIfNecessary(filesLookupResultRoot)
-        val filesRoot = filesLookupResultRoot.convertToSrcSetRoot()
+        NotFoundLocalSrcFileLookupRootException.throwIfNecessary(filesLookupResultRoot)
+        DuplicatedLocalSrcFileLookupRootException.throwIfNecessary(filesLookupResultRoot)
+        val filesRoot = SrcSetRoot.fromLookupRoot(filesLookupResultRoot)
         val infoReq = filesRoot.convertToRequest()
-        val result = comparisonService.uniteLocalFileInfoSrcSetRoot(
+        val result = comparisonService.uniteFileChecksumSrcSetRoots(
             fileRoot = filesRoot,
-            infoRoot = localSrcInfoService.lookupLocalInfoSrcSetRoot(infoReq).convertToSrcSetRoot()
+            infoRoot = SrcSetRoot.fromLookupRoot(localSrcInfoService.lookupLocalInfoSrcSetRoot(infoReq))
         )
         log.info(
             "Read local src set root completed: scripts={}, modules={}, advImports={}",
@@ -81,24 +83,10 @@ class LocalSrcService(
 
     /**
      * Обновить локальный src set root информацией
-     * @param scriptChecksums чексуммы с сервера для обновления
-     * @return перечень обновленной информации
-     */
-    fun updateLocalInfoSrcSetRoot(scriptChecksums: ScriptChecksums): SrcSetRoot<LocalInfo> {
-        val root = SrcSetRoot(
-            scripts = scriptChecksums.scripts.map { LocalInfo(it) }.toSet(),
-            modules = scriptChecksums.modules.map { LocalInfo(it) }.toSet(),
-            advImports = scriptChecksums.advimports.map { LocalInfo(it) }.toSet()
-        )
-        return updateLocalInfoSrcSetRoot(root)
-    }
-
-    /**
-     * Обновить локальный src set root информацией
      * @param srcSetRoot src set root с информацией для обновления
      * @return перечень обновленной информации
      */
-    fun updateLocalInfoSrcSetRoot(srcSetRoot: SrcSetRoot<LocalInfo>): SrcSetRoot<LocalInfo> {
+    fun <T : ISrcChecksum> updateLocalInfoSrcSetRoot(srcSetRoot: SrcSetRoot<T>): SrcSetRoot<T> {
         log.debug(
             "Update local info requested: scripts={}, modules={}, advImports={}",
             srcSetRoot.scripts.size,
@@ -110,19 +98,19 @@ class LocalSrcService(
 
     /**
      * Обновить локальный src set root информацией
-     * @param remoteTextInfoSrcSetRoot src set root с информацией для обновления
+     * @param textSrcSetRoot src set root с информацией для обновления
      * @return файлы после записи
      */
-    fun updateLocalFileSrcSetRoot(remoteTextInfoSrcSetRoot: SrcSetRoot<RemoteTextInfo>): SrcSetRoot<LocalFileInfo> {
+    fun updateLocalFileSrcSetRoot(textSrcSetRoot: SrcSetRoot<SrcTextChecksum>): SrcSetRoot<SrcFileChecksum> {
         log.info(
             "Write local src started: scripts={}, modules={}, advImports={}",
-            remoteTextInfoSrcSetRoot.scripts.size,
-            remoteTextInfoSrcSetRoot.modules.size,
-            remoteTextInfoSrcSetRoot.advImports.size
+            textSrcSetRoot.scripts.size,
+            textSrcSetRoot.modules.size,
+            textSrcSetRoot.advImports.size
         )
-        updateLocalInfoSrcSetRoot(remoteTextInfoSrcSetRoot.convert { LocalInfo(it.info) })
-        val result = localSrcFileService.whiteLocalFiles(remoteTextInfoSrcSetRoot)
+        updateLocalInfoSrcSetRoot(textSrcSetRoot)
+        val files = localSrcFileService.whiteLocalFiles(textSrcSetRoot)
         log.info("Write local src completed")
-        return result
+        return comparisonService.uniteFileChecksumSrcSetRoots(files, textSrcSetRoot)
     }
 }

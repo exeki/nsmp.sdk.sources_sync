@@ -2,22 +2,17 @@ package ru.kazantsev.nsmp.sdk.sources_sync
 
 import org.slf4j.LoggerFactory
 import ru.kazantsev.nsmp.basic_api_connector.ConnectorParams
-import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.local.ILocalChecksum
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalFileInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcSyncCheckPair
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.remote.RemoteInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.request.SrcRequest
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSetRoot
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.local.LocalInfo
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.pair.SrcPair
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.EmptySrcRequestException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.PullEmptySrcSetRootException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.PushEmptySrcSetRootException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.PushSyncCheckFailedException
-import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.SyncCheckEmptySrcSetRootException
-import ru.kazantsev.nsmp.sdk.sources_sync.service.utils.ComparisonService
-import ru.kazantsev.nsmp.sdk.sources_sync.service.RemoteSrcService
+import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcRequest
+import ru.kazantsev.nsmp.sdk.sources_sync.data.root.SrcSetRoot
+import ru.kazantsev.nsmp.sdk.sources_sync.data.signature.src.ISrcChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcFileChecksum
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcPair
+import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcSyncCheckPair
+import ru.kazantsev.nsmp.sdk.sources_sync.exception.commands.*
 import ru.kazantsev.nsmp.sdk.sources_sync.service.LocalSrcService
+import ru.kazantsev.nsmp.sdk.sources_sync.service.RemoteSrcService
+import ru.kazantsev.nsmp.sdk.sources_sync.service.utils.ComparisonService
 
 /**
  * Сервис, который оркестрирует работу с исходниками NSD.
@@ -40,7 +35,7 @@ class SrcSyncService(
      * @throws PullEmptySrcSetRootException если по запросу не найдено ни одного исходника
      */
     @Throws(EmptySrcRequestException::class, PullEmptySrcSetRootException::class)
-    fun pull(req: SrcRequest): SrcSetRoot<LocalFileInfo> {
+    fun pull(req: SrcRequest): SrcSetRoot<SrcFileChecksum> {
         EmptySrcRequestException.throwIfNecessary(req)
         log.info("Fetch started: req={}", req)
         val remoteSrcSetRoot = remoteSrcService.getRemoteSrc(req)
@@ -63,7 +58,7 @@ class SrcSyncService(
      * @throws SyncCheckEmptySrcSetRootException если по запросу не найдено ни одного исходника
      */
     @Throws(EmptySrcRequestException::class, SyncCheckEmptySrcSetRootException::class)
-    fun syncCheck(req: SrcRequest): SrcSetRoot<SrcSyncCheckPair<LocalFileInfo, RemoteInfo>> {
+    fun syncCheck(req: SrcRequest): SrcSetRoot<SrcSyncCheckPair<SrcFileChecksum, SrcChecksum>> {
         EmptySrcRequestException.throwIfNecessary(req)
         log.info("Diff started: {}", req)
         val localSrcSetRoot = localSrcService.getLocalSrcSetRoot(req)
@@ -78,7 +73,7 @@ class SrcSyncService(
         return result
     }
 
-    private fun <T : ILocalChecksum> syncCheck(localRoot: SrcSetRoot<T>): SrcSetRoot<SrcSyncCheckPair<T, RemoteInfo>> {
+    private fun <T : ISrcChecksum> syncCheck(localRoot: SrcSetRoot<T>): SrcSetRoot<SrcSyncCheckPair<T, SrcChecksum>> {
         val req = localRoot.convertToRequest()
         log.debug(
             "Sync check comparison started: scripts={}, modules={}, advImports={}",
@@ -109,7 +104,7 @@ class SrcSyncService(
     fun push(
         req: SrcRequest,
         force: Boolean = false
-    ): SrcSetRoot<SrcPair<LocalFileInfo, RemoteInfo>> {
+    ): SrcSetRoot<SrcPair<SrcFileChecksum, SrcChecksum>> {
         EmptySrcRequestException.throwIfNecessary(req)
         log.info("Push started: req={}, force={}", req, force)
         val localFileSrcSetRoot = localSrcService.getLocalSrcSetRoot(req)
@@ -119,24 +114,19 @@ class SrcSyncService(
             val diff = comparisonService.pairSyncCheck(localFileSrcSetRoot, startRemoteInfoSrcSetRoot)
             PushSyncCheckFailedException.throwIfNecessary(diff)
         } else log.warn("force push enabled!")
-        val scriptChecksums = remoteSrcService.sendRemoteSrc(localFileSrcSetRoot)
-        val newLocalInfoSrcSetRoot = SrcSetRoot(
-            scripts = scriptChecksums.scripts.map { LocalInfo(it) }.toSet(),
-            modules = scriptChecksums.modules.map { LocalInfo(it) }.toSet(),
-            advImports = scriptChecksums.advimports.map { LocalInfo(it) }.toSet()
-        )
-        localSrcService.updateLocalInfoSrcSetRoot(scriptChecksums)
+        val newInfoSrcSetRoot = remoteSrcService.sendRemoteSrc(localFileSrcSetRoot)
+        localSrcService.updateLocalInfoSrcSetRoot(newInfoSrcSetRoot)
         log.info(
             "Push completed: scripts={}, modules={}, advImports={}",
-            scriptChecksums.scripts.size,
-            scriptChecksums.modules.size,
-            scriptChecksums.advimports.size
+            newInfoSrcSetRoot.scripts.size,
+            newInfoSrcSetRoot.modules.size,
+            newInfoSrcSetRoot.advImports.size
         )
         return comparisonService.pairSrcSetRoots(
-            remoteSrcSetRoot = startRemoteInfoSrcSetRoot,
-            localSrcSetRoot = comparisonService.uniteLocalFileInfoSrcSetRoot(
+            rightSrcSetRoot = startRemoteInfoSrcSetRoot,
+            leftSrcSetRoot = comparisonService.uniteFileChecksumSrcSetRoots(
                 fileRoot = localFileSrcSetRoot,
-                infoRoot = newLocalInfoSrcSetRoot
+                infoRoot = newInfoSrcSetRoot
             )
         )
     }

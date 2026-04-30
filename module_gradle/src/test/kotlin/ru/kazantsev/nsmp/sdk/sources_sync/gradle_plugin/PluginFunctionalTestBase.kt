@@ -5,7 +5,7 @@ package ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.BeforeEach
 import ru.kazantsev.nsmp.sdk.sources_sync.SrcFoldersParams
-import ru.kazantsev.nsmp.sdk.sources_sync.data.src.SrcType
+import ru.kazantsev.nsmp.sdk.sources_sync.data.SrcType
 import ru.kazantsev.nsmp.sdk.sources_sync.gradle_plugin.tasks.TaskArgs
 import java.nio.file.Files
 import java.nio.file.Path
