@@ -78,6 +78,7 @@ jobs:
             exit 1
           fi
 
+
       - name: Maven publish
         if: steps.published.outputs.exists == 'false'
         env:
