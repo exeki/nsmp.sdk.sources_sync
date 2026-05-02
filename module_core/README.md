@@ -27,7 +27,7 @@ dependencies {
 
 ## Основной API
 
-Класс: `ru.kazantsev.nsmp.sdk.sources_sync.SrcService`
+Класс: [ru.kazantsev.nsmp.sdk.sources_sync.SrcSyncService](src/main/kotlin/ru/kazantsev/nsmp/sdk/sources_sync/SrcSyncService.kt)
 
 Методы:
 
