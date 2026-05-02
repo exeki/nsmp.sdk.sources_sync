@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "ru.kazantsev.nsmp.sdk.sources_sync"
-version = "1.7.3"
+version = "1.7.4"
 
 subprojects {
 
