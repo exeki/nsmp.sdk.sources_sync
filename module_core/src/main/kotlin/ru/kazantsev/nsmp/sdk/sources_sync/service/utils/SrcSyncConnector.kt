@@ -13,7 +13,7 @@ import ru.kazantsev.nsmp.sdk.sources_sync.data.request.SrcRequest
 class SrcSyncConnector(params: ConnectorParams) : Connector(params) {
 
     private val moduleBase: String = "modules.sdkController."
-    private val paramsConst: String = "request,response,user"
+    private val paramsConst: String = ""
 
     fun getSrc(body: SrcRequest): ByteArray {
         return this.execPost(
